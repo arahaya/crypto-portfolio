@@ -1,10 +1,6 @@
 
 <app>
 
-    <h3>日本円で見れちゃうやつ</h3>
-    <p>左のリストから保有している通貨を選んで、右の表の「Balance」に保有枚数を入れます<br>
-    PoloniexとBittrexのみ対応です！</p>
-
     <div class="sidebar">
         <ul each={ markets }>
             <li each={ coins } class={ selected: selected } onclick={ toggleCoin }>
@@ -13,44 +9,56 @@
         </ul>
     </div>
     <main class="main">
+        <h2>日本円で見れちゃうやつ</h2>
+        <p>左のリストから保有している通貨を選んで、右の表に保有枚数を入れます<br>
+        PoloniexとBittrexのBTC建てのみ対応です！</p>
+
         <table>
             <thead>
                 <tr>
-                    <th>Market</th>
+                    <th>取引所</th>
                     <th>通貨</th>
-                    <th>Bid</th>
-                    <th>Ask</th>
-                    <th>Change(24h)</th>
-                    <th>Balance</th>
-                    <th>Total</th>
-                    <th>Delete</th>
+                    <th>買値</th>
+                    <th>売値</th>
+                    <th>上昇率(24h)</th>
+                    <th>保有枚数</th>
+                    <th>小計</th>
+                    <th>削除</th>
                 </tr>
             </thead>
-            <tbody each={ markets }>
-                    <tr each={ coins } if={ selected }>
-                        <td>{ parent.marketName }</td>
-                        <td>{ symbol }</td>
-                        <td>{ number_format(bid, 4) }円</td>
-                        <td>{ number_format(ask, 4) }円</td>
-                        <td>{ number_format(change, 2) }%</td>
-                        <td><input type="text" ref="balance_{ symbol }" value="{ balance }" oninput="{ updateBalance }"></td>
-                        <td><span class="total">{ number_format(balance * bid) }円</span></td>
-                        <td><button onclick={ toggleCoin }>Delete</button></td>
-                    </tr>
+            <tbody>
+                <tr each={ getSelectedCoins(markets) }>
+                    <td>{ marketName }</td>
+                    <td>{ symbol }</td>
+                    <td>{ number_format(bid, 4) }円</td>
+                    <td>{ number_format(ask, 4) }円</td>
+                    <td>{ number_format(change, 2) }%</td>
+                    <td><input type="text" ref="balance_{ symbol }" value="{ balance }" oninput="{ updateBalance }"></td>
+                    <td><span class="total">{ number_format(balance * bid) }円</span></td>
+                    <td><button onclick={ toggleCoin }>削除</button></td>
+                </tr>
             </tbody>
         </table>
     </main>
 
     <style>
+        app {
+            color: #333;
+            font-size: 14px;
+        }
+
         .sidebar {
             float: left;
             width: 220px;
+            height: 100%;
+            overflow-y: scroll;
         }
 
         ul {
             list-style: none;
             margin: 0;
             padding: 0;
+            border-top: 1px solid #DDD;
         }
 
         ul li {
@@ -60,13 +68,21 @@
             cursor: pointer;
         }
 
+        ul li:hover {
+            background: #F5F5F5;
+        }
+
         ul li.selected {
-            background: #444;
+            background: #27a2db;
             color: #FFF;
         }
 
         .main {
             margin-left: 240px;
+        }
+
+        h2, p {
+            margin: 10px 0;
         }
 
         table {
@@ -76,8 +92,29 @@
 
         table th,
         table td {
-            padding: 5px 8px;
+            padding: 6px 10px;
             border: 1px solid #DDD;
+            font-size: 14px;
+        }
+
+        table th {
+            padding: 10px 10px;
+            font-weight: normal;
+            background: #F5F5F5;
+            border-bottom: 1px solid #27a2db;
+        }
+
+        table tr:nth-child(even) td {
+            background: #F5F5F5;
+        }
+
+        button {
+            border: none;
+            border-radius: 4px;
+            background: #27a2db;
+            color: #FFF;
+            padding: 5px 10px;
+            cursor: pointer;
         }
     </style>
 
@@ -176,6 +213,20 @@
                     });
                 }
             });
+        }
+
+        this.getSelectedCoins = function (markets) {
+            var coins = [];
+
+            markets.forEach(function (market) {
+                market.coins.forEach(function (coin) {
+                    if (coin.selected) {
+                        coins.push(coin);
+                    }
+                });
+            });
+
+            return coins;
         }
 
         this.updateBalance = function (e) {
