@@ -265,6 +265,19 @@
         }
 
         this.markets = [];
+        this.markets.push({
+            marketName: 'BitFlyer',
+            coins: [{
+                marketName: 'BitFlyer',
+                symbol: 'BTC',
+                bid: opts.btc_rate.bid,
+                ask: opts.btc_rate.ask,
+                change: 0,
+                balance: null,
+                total: 0,
+                selected: false
+            }]
+        });
         this.markets.push(getPoloniexCoins(opts.poloniex, opts.btc_rate.bid));
         this.markets.push(getBittrexCoins(opts.bittrex, opts.btc_rate.bid));
 
