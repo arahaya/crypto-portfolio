@@ -65,7 +65,7 @@ $btc_rate = fetch_btc_rate();
     <app></app>
 
     <script src="utils.js"></script>
-    <script src="app.tag" type="riot/tag"></script>
+    <script src="app.html" type="riot/tag"></script>
     <script src="riot-compiler.min.js"></script>
 
     <script>
