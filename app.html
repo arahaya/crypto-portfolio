@@ -32,7 +32,7 @@
                     <td>{ symbol }</td>
                     <td>{ number_format(bid, 4) }円</td>
                     <td>{ number_format(ask, 4) }円</td>
-                    <td>{ number_format(change, 2) }%</td>
+                    <td><span class="{ plus: change >= 0, minus: change < 0 }">{ number_format(change, 2) }%</td>
                     <td><input type="text" ref="balance_{ symbol }" value="{ balance }" oninput="{ updateBalance }"></td>
                     <td><span class="subtotal">{ number_format(getSubtotal(this)) }円</span></td>
                     <td><button onclick={ toggleCoin }>削除</button></td>
@@ -137,6 +137,18 @@
             color: #FFF;
             padding: 5px 10px;
             cursor: pointer;
+        }
+
+        .plus {
+            color: #27892f;
+        }
+
+        .plus:before {
+            content: '+';
+        }
+
+        .minus {
+            color: #c02a1d;
         }
     </style>
 
