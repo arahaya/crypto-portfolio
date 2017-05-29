@@ -34,10 +34,17 @@
                     <td>{ number_format(ask, 4) }円</td>
                     <td>{ number_format(change, 2) }%</td>
                     <td><input type="text" ref="balance_{ symbol }" value="{ balance }" oninput="{ updateBalance }"></td>
-                    <td><span class="total">{ number_format(balance * bid) }円</span></td>
+                    <td><span class="subtotal">{ number_format(getSubtotal(this)) }円</span></td>
                     <td><button onclick={ toggleCoin }>削除</button></td>
                 </tr>
             </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="6">合計</th>
+                    <td>{ number_format(getTotal()) }円</td>
+                    <td></td>
+                </tr>
+            </tfoot>
         </table>
     </main>
 
@@ -97,14 +104,29 @@
             font-size: 14px;
         }
 
-        table th {
+        table thead th {
             padding: 10px 10px;
             font-weight: normal;
             background: #F5F5F5;
             border-bottom: 1px solid #27a2db;
         }
 
-        table tr:nth-child(even) td {
+        table tbody tr:last-child th,
+        table tbody tr:last-child td {
+            border-bottom: 1px solid #27a2db;
+        }
+
+        table tfoot th,
+        table tfoot td {
+            background: #F5F5F5;
+            border-top: 1px solid #27a2db;
+        }
+
+        table tfoot th {
+            text-align: right;
+        }
+
+        table tbody tr:nth-child(even) td {
             background: #F5F5F5;
         }
 
@@ -151,7 +173,6 @@
                         ask: item.lowestAsk * btc_rate,
                         change: item.percentChange * 100,
                         balance: null,
-                        total: 0,
                         selected: false
                     });
                 }
@@ -182,7 +203,6 @@
                     ask: item.Ask * btc_rate,
                     change: (item.Last - item.PrevDay) / item.Last * 100,
                     balance: null,
-                    total: 0,
                     selected: false
                 });
             });
@@ -264,6 +284,22 @@
             saveStore(store);
         }
 
+        this.getSubtotal = function (coin) {
+            return coin.bid * coin.balance;
+        }
+
+        this.getTotal = function () {
+            var self = this;
+            var coins = this.getSelectedCoins(this.markets);
+            var total = 0;
+
+            coins.forEach(function (coin) {
+                total += self.getSubtotal(coin);
+            });
+
+            return total;
+        }
+
         this.markets = [];
         this.markets.push({
             marketName: 'BitFlyer',
@@ -274,7 +310,6 @@
                 ask: opts.btc_rate.ask,
                 change: 0,
                 balance: null,
-                total: 0,
                 selected: false
             }]
         });
