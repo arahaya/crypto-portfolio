@@ -2,8 +2,11 @@
 <app>
 
     <div class="sidebar">
-        <ul each={ markets }>
-            <li each={ coins } class={ selected: selected } onclick={ toggleCoin }>
+        <div class="filter">
+            <input type="text" class="filter-input" placeholder="絞り込み検索" ref="filter" oninput={ update }>
+        </div>
+        <ul>
+            <li each={ getFilterdCoins(markets) } class={ selected: selected } onclick={ toggleCoin }>
                 { marketName } { symbol }
             </li>
         </ul>
@@ -23,6 +26,7 @@
                     <th>上昇率(24h)</th>
                     <th>保有枚数</th>
                     <th>小計</th>
+                    <th>資産割合</th>
                     <th>削除</th>
                 </tr>
             </thead>
@@ -34,15 +38,15 @@
                     <td>{ number_format(ask, 4) }円</td>
                     <td><span class="{ plus: change >= 0, minus: change < 0 }">{ number_format(change, 2) }%</td>
                     <td><input type="text" ref="balance_{ symbol }" value="{ balance }" oninput="{ updateBalance }"></td>
-                    <td><span class="subtotal">{ number_format(getSubtotal(this)) }円</span></td>
+                    <td><span class="subtotal">{ number_format(subtotal) }円</span></td>
+                    <td>{ number_format(subtotal / total * 100, 2) }%</td>
                     <td><button onclick={ toggleCoin }>削除</button></td>
                 </tr>
             </tbody>
             <tfoot>
                 <tr>
                     <th colspan="6">合計</th>
-                    <td>{ number_format(getTotal()) }円</td>
-                    <td></td>
+                    <td colspan="3">{ number_format(total) }円</td>
                 </tr>
             </tfoot>
         </table>
@@ -59,6 +63,21 @@
             width: 220px;
             height: 100%;
             overflow-y: scroll;
+        }
+
+        .filter-input {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 0 8px;
+            font-size: 16px;
+            height: 32px;
+            border: 1px solid #DDD;
+            border-radius: 16px;
+            outline: none;
+        }
+
+        .filter-input:focus {
+            border-color: #27a2db;
         }
 
         ul {
@@ -153,6 +172,8 @@
     </style>
 
     <script>
+        this.total = 0;
+
         function sortBySymbol(a, b) {
             if (a.symbol < b.symbol) {
                 return -1;
@@ -185,6 +206,7 @@
                         ask: item.lowestAsk * btc_rate,
                         change: item.percentChange * 100,
                         balance: null,
+                        subtotal: 0,
                         selected: false
                     });
                 }
@@ -215,6 +237,7 @@
                     ask: item.Ask * btc_rate,
                     change: (item.Last - item.PrevDay) / item.Last * 100,
                     balance: null,
+                    subtotal: 0,
                     selected: false
                 });
             });
@@ -247,16 +270,48 @@
             });
         }
 
+        function calculateTotal(coins) {
+            var total = 0;
+
+            coins.forEach(function (coin) {
+                total += coin.subtotal;
+            });
+
+            return total;
+        }
+
+        // TODO: 通貨の正式名称を検索の対象とする
+        this.getFilterdCoins = function (markets) {
+            var coins = [];
+            var filter = this.refs.filter.value.toUpperCase();
+
+            markets.forEach(function (market) {
+                market.coins.forEach(function (coin) {
+                    if (!filter || coin.symbol.toUpperCase().indexOf(filter) !== -1) {
+                        coins.push(coin);
+                    }
+                });
+            });
+
+            return coins;
+        }
+
         this.getSelectedCoins = function (markets) {
             var coins = [];
 
             markets.forEach(function (market) {
                 market.coins.forEach(function (coin) {
                     if (coin.selected) {
+                        // Update individual coins subtotal
+                        coin.subtotal = coin.bid * coin.balance;
+
                         coins.push(coin);
                     }
                 });
             });
+
+            // Update assets total
+            this.total = calculateTotal(coins);
 
             return coins;
         }
@@ -286,7 +341,6 @@
                 }
             } else {
                 item.selected = true;
-                console.log(store);
                 if (store[item.marketName] === undefined) {
                     store[item.marketName] = {};
                 }
@@ -294,22 +348,6 @@
             }
 
             saveStore(store);
-        }
-
-        this.getSubtotal = function (coin) {
-            return coin.bid * coin.balance;
-        }
-
-        this.getTotal = function () {
-            var self = this;
-            var coins = this.getSelectedCoins(this.markets);
-            var total = 0;
-
-            coins.forEach(function (coin) {
-                total += self.getSubtotal(coin);
-            });
-
-            return total;
         }
 
         this.markets = [];
@@ -322,6 +360,7 @@
                 ask: opts.btc_rate.ask,
                 change: 0,
                 balance: null,
+                subtotal: 0,
                 selected: false
             }]
         });
