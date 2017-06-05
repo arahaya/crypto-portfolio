@@ -33,11 +33,14 @@
             <tbody>
                 <tr each={ getSelectedCoins(markets) }>
                     <td>{ marketName }</td>
-                    <td>{ symbol }</td>
+                    <td>
+                        <a if={ url } href="{ url }" target="_blank" rel="noreferrer noopener">{ symbol }</a>
+                        <span if={ !url }>{ symbol }</span>
+                    </td>
                     <td>{ number_format(bid, 4) }円</td>
                     <td>{ number_format(ask, 4) }円</td>
                     <td><span class="{ plus: change >= 0, minus: change < 0 }">{ number_format(change, 2) }%</td>
-                    <td><input type="text" ref="balance_{ symbol }" value="{ balance }" oninput="{ updateBalance }"></td>
+                    <td><input type="text" class="balance-input" ref="balance_{ symbol }" value="{ balance }" oninput="{ updateBalance }"></td>
                     <td><span class="subtotal">{ number_format(subtotal) }円</span></td>
                     <td>{ number_format(subtotal / total * 100, 2) }%</td>
                     <td><button onclick={ toggleCoin }>削除</button></td>
@@ -58,6 +61,32 @@
             font-size: 14px;
         }
 
+        a {
+            color: #4d90fe;
+            text-decoration: none;
+        }
+
+        a:link:hover {
+            text-decoration: underline;
+        }
+
+        input[type="text"] {
+            height: 32px;
+            padding: 0 8px;
+            font-size: 16px;
+            border: 1px solid #CCC;
+        }
+
+        ::-webkit-input-placeholder {
+            font-size: 13px;
+        }
+        ::-moz-placeholder {
+            font-size: 13px;
+        }
+        :-ms-input-placeholder {
+            font-size: 13px;
+        }
+
         .sidebar {
             float: left;
             width: 220px;
@@ -65,19 +94,19 @@
             overflow-y: scroll;
         }
 
+        .filter {
+            background: #EEE;
+            padding: 8px;
+        }
+
         .filter-input {
             width: 100%;
-            margin-bottom: 10px;
-            padding: 0 8px;
-            font-size: 16px;
-            height: 32px;
-            border: 1px solid #DDD;
-            border-radius: 16px;
+            border-radius: 22px;
             outline: none;
         }
 
         .filter-input:focus {
-            border-color: #27a2db;
+            box-shadow: 0 0 0 1px #4d90fe;
         }
 
         ul {
@@ -145,8 +174,8 @@
             text-align: right;
         }
 
-        table tbody tr:nth-child(even) td {
-            background: #F5F5F5;
+        table tbody tr:nth-child(even) td input {
+            width: 100%;
         }
 
         button {
@@ -169,6 +198,10 @@
         .minus {
             color: #c02a1d;
         }
+
+        .balance-input {
+            width: 100%;
+        }
     </style>
 
     <script>
@@ -188,20 +221,21 @@
             var marketName = 'Poloniex';
             var coins = [];
 
-            for (var symbol in data) {
-                if (data.hasOwnProperty(symbol)) {
-                    var item = data[symbol];
+            for (var itemName in data) {
+                if (data.hasOwnProperty(itemName)) {
+                    var item = data[itemName];
 
-                    if (!startsWith(symbol, 'BTC_')) {
+                    if (!startsWith(itemName, 'BTC_')) {
                         continue;
                     }
 
                     // BTC_XXX -> XXX
-                    symbol = symbol.substr(4);
+                    symbol = itemName.substr(4);
 
                     coins.push({
                         marketName: marketName,
                         symbol: symbol,
+                        url: 'https://poloniex.com/exchange#' + itemName.toLowerCase(),
                         bid: item.highestBid * btc_rate,
                         ask: item.lowestAsk * btc_rate,
                         change: item.percentChange * 100,
@@ -233,6 +267,7 @@
                 coins.push({
                     marketName: marketName,
                     symbol: symbol,
+                    url: 'https://bittrex.com/Market/Index?MarketName=' + item.MarketName,
                     bid: item.Bid * btc_rate,
                     ask: item.Ask * btc_rate,
                     change: (item.Last - item.PrevDay) / item.Last * 100,
@@ -356,6 +391,7 @@
             coins: [{
                 marketName: 'BitFlyer',
                 symbol: 'BTC',
+                url: 'https://bitflyer.jp/ex/Price',
                 bid: opts.btc_rate.bid,
                 ask: opts.btc_rate.ask,
                 change: 0,
