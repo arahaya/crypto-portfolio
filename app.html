@@ -12,9 +12,10 @@
         </ul>
     </div>
     <main class="main">
-        <h2>日本円で見れちゃうやつ</h2>
+        <h2>暗号通貨 日本円換算さん</h2>
         <p>左のリストから保有している通貨を選んで、右の表に保有枚数を入れます<br>
-        PoloniexとBittrexのBTC建てのみ対応です！</p>
+        Poloniex、Bittrex、Kraken、CryptopiaのBTC建て通貨に対応しています。<br>
+        <small>※Cryptopiaはよく落ちるのでデータが最新でない場合があります。</small></p>
 
         <table>
             <thead>
@@ -137,10 +138,11 @@
         }
 
         h2, p {
-            margin: 10px 0;
+            margin: 5px 0;
         }
 
         table {
+            margin: 10px 0;
             border-collapse: collapse;
             width: 100%;
         }
@@ -236,8 +238,8 @@
                         marketName: marketName,
                         symbol: symbol,
                         url: 'https://poloniex.com/exchange#' + itemName.toLowerCase(),
-                        bid: item.highestBid * btc_rate,
-                        ask: item.lowestAsk * btc_rate,
+                        bid: item.highestBid * btc_rate.bid,
+                        ask: item.lowestAsk * btc_rate.ask,
                         change: item.percentChange * 100,
                         balance: null,
                         subtotal: 0,
@@ -268,9 +270,72 @@
                     marketName: marketName,
                     symbol: symbol,
                     url: 'https://bittrex.com/Market/Index?MarketName=' + item.MarketName,
-                    bid: item.Bid * btc_rate,
-                    ask: item.Ask * btc_rate,
+                    bid: item.Bid * btc_rate.bid,
+                    ask: item.Ask * btc_rate.ask,
                     change: (item.Last - item.PrevDay) / item.Last * 100,
+                    balance: null,
+                    subtotal: 0,
+                    selected: false
+                });
+            });
+
+            return {
+                marketName: marketName,
+                coins: coins.sort(sortBySymbol)
+            };
+        }
+
+        function getKrakenCoins(data, btc_rate) {
+            var marketName = 'Kraken';
+            var coins = [];
+
+            for (var itemName in data.result) {
+                if (data.result.hasOwnProperty(itemName)) {
+                    var item = data.result[itemName];
+
+                    // Unquote
+                    itemName = itemName.replace('XX', '##');
+                    itemName = itemName.replace('X', '');
+                    itemName = itemName.replace('##', 'X');
+
+                    // ZZZXBT -> ZZZ
+                    symbol = itemName.slice(0, -3);
+
+                    coins.push({
+                        marketName: marketName,
+                        symbol: symbol,
+                        url: 'https://www.kraken.com/charts',
+                        bid: item.b[0] * btc_rate.bid,
+                        ask: item.a[0] * btc_rate.ask,
+                        change: 0,
+                        balance: null,
+                        subtotal: 0,
+                        selected: false
+                    });
+                }
+            }
+
+            return {
+                marketName: marketName,
+                coins: coins.sort(sortBySymbol)
+            };
+        }
+
+        function getCryptopiaCoins(data, btc_rate) {
+            var marketName = 'Cryptopia';
+            var coins = [];
+
+            data.Data.forEach(function (item) {
+                // XXX/BTC -> XXX
+                symbol = item.Label.slice(0, -4);
+
+                coins.push({
+                    marketName: marketName,
+                    symbol: symbol,
+                    url: 'https://www.cryptopia.co.nz/Exchange/?market=' + item.Label.replace('/', '_'),
+                    bid: item.BidPrice * btc_rate.bid,
+                    ask: item.AskPrice * btc_rate.ask,
+                    change: item.Change,
                     balance: null,
                     subtotal: 0,
                     selected: false
@@ -400,8 +465,10 @@
                 selected: false
             }]
         });
-        this.markets.push(getPoloniexCoins(opts.poloniex, opts.btc_rate.bid));
-        this.markets.push(getBittrexCoins(opts.bittrex, opts.btc_rate.bid));
+        this.markets.push(getPoloniexCoins(opts.poloniex, opts.btc_rate));
+        this.markets.push(getBittrexCoins(opts.bittrex, opts.btc_rate));
+        this.markets.push(getKrakenCoins(opts.kraken, opts.btc_rate));
+        this.markets.push(getCryptopiaCoins(opts.cryptopia, opts.btc_rate));
 
         restore(this.markets, getStore());
     </script>
