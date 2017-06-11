@@ -1,5 +1,6 @@
 
 <app>
+    <div class="overlay mobile-only" onclick={ toggleSidebar }></div>
 
     <div class="sidebar">
         <div class="filter">
@@ -12,47 +13,83 @@
         </ul>
     </div>
     <main class="main">
-        <h2>{ title }</h2>
+        <h1>{ title }</h1>
         <p>
-            左の一覧から保有している通貨を選択して、右の表に保有枚数を入力してください。
+            一覧から通貨を選択して、保有枚数を入力すると円換算評価額が表示されます。
         </p>
 
-        <table>
-            <thead>
-                <tr>
-                    <th class="currency">通貨</th>
-                    <th class="price-btc">BTCレート</th>
-                    <th class="price-jpy">価格(JPY)</th>
-                    <th class="change-week">上昇率(7日)</th>
-                    <th class="change-day">上昇率(24時間)</th>
-                    <th class="balance">保有枚数</th>
-                    <th class="subtotal">小計</th>
-                    <th class="percentage">資産割合</th>
-                    <th class="delete">削除</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr each={ getPopulatedPortfolioItems() }>
-                    <td class="currency">
-                        <a href="{ url }" target="_blank" rel="noreferrer noopener">{ name } ({ symbol })</a>
-                    </td>
-                    <td class="price-btc">{ price_btc }</td>
-                    <td class="price-jpy">{ number_format(price_jpy, 2) }円</td>
-                    <td class="change-week"><span class="{ plus: change_week >= 0, minus: change_week < 0 }">{ number_format(change_week, 2) }%</td>
-                    <td class="change-day"><span class="{ plus: change_day >= 0, minus: change_day < 0 }">{ number_format(change_day, 2) }%</td>
-                    <td class="balance"><input type="text" class="balance-input" ref="balance_{ symbol }" value="{ balance }" oninput="{ updateBalance }"></td>
-                    <td class="subtotal">{ number_format(subtotal) }円</td>
-                    <td class="percentage">{ number_format(subtotal / total * 100, 2) }%</td>
-                    <td class="delete"><button onclick={ deletePortfolio }>削除</button></td>
-                </tr>
-            </tbody>
-            <tfoot>
-                <tr>
-                    <th colspan="6">合計</th>
-                    <td colspan="3">{ number_format(total) }円</td>
-                </tr>
-            </tfoot>
-        </table>
+        <div class="desktop-only">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="currency">通貨</th>
+                        <th class="price-btc">BTCレート</th>
+                        <th class="price-jpy">価格(JPY)</th>
+                        <th class="change-week">上昇率(7日)</th>
+                        <th class="change-day">上昇率(24時間)</th>
+                        <th class="balance">保有枚数</th>
+                        <th class="subtotal">小計</th>
+                        <th class="percentage">資産割合</th>
+                        <th class="delete">削除</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr each={ portfolio }>
+                        <td class="currency">
+                            <a href="https://coinmarketcap.com/currencies/{ currency }/" target="_blank" rel="noreferrer noopener">{ data[currency].name } ({ data[currency].symbol })</a>
+                        </td>
+                        <td class="price-btc">{ data[currency].price_btc }</td>
+                        <td class="price-jpy">{ number_format(data[currency].price_jpy, 2) }円</td>
+                        <td class="change-week"><span class="{ plus: data[currency].percent_change_7d >= 0, minus: data[currency].percent_change_7d < 0 }">{ number_format(data[currency].percent_change_7d, 2) }%</span></td>
+                        <td class="change-day"><span class="{ plus: data[currency].percent_change_24h >= 0, minus: data[currency].percent_change_24h < 0 }">{ number_format(data[currency].percent_change_24h, 2) }%</span></td>
+                        <td class="balance"><input type="number" class="balance-input" value="{ balance }" oninput="{ updateBalance }"></td>
+                        <td class="subtotal">{ number_format(balance * data[currency].price_jpy) }円</td>
+                        <td class="percentage">{ number_format((balance * data[currency].price_jpy) / calculateTotal(portfolio) * 100, 2) }%</td>
+                        <td class="delete"><button class="delete-button" onclick={ deletePortfolio }>削除</button></td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="6">合計</th>
+                        <td colspan="3">{ number_format(calculateTotal(portfolio)) }円</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <div class="mobile-only">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="currency">通貨</th>
+                        <th class="price-jpy">価格(JPY)</th>
+                        <th class="balance">保有枚数</th>
+                        <th class="subtotal">小計</th>
+                        <th class="delete">削除</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr each={ portfolio }>
+                        <td class="currency">
+                            <a href="https://coinmarketcap.com/currencies/{ currency }/" target="_blank" rel="noreferrer noopener">{ data[currency].symbol }</a>
+                        </td>
+                        <td class="price-jpy">{ number_format(data[currency].price_jpy, 2) }</td>
+                        <td class="balance"><input type="number" class="balance-input" value="{ balance }" oninput="{ updateBalance }"></td>
+                        <td class="subtotal">{ number_format(balance * data[currency].price_jpy) }</td>
+                        <td class="delete"><button class="delete-button" onclick={ deletePortfolio }>削除</button></td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="3">合計</th>
+                        <td colspan="2">{ number_format(calculateTotal(portfolio)) }円</td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <div class="select-currency">
+                <button class="select-currency-button" onclick={ toggleSidebar }>通貨を追加する</button>
+            </div>
+        </div>
         <p>
             <small>※coinmarketcap.com掲載の通貨に対応しています。</small><br>
             <small>※レートは5分程度で更新されます。</small><br>
@@ -64,11 +101,14 @@
     <style>
         app {
             color: #333;
+            font-family: 'Meiryo UI', 'メイリオ', 'MS Pゴシック', sans-serif;
             font-size: 14px;
+            line-height: 1.2;
+            letter-spacing: 0.5px;
         }
 
         a {
-            color: #4d90fe;
+            color: #27a2db;
             text-decoration: none;
         }
 
@@ -76,7 +116,12 @@
             text-decoration: underline;
         }
 
-        input[type="text"] {
+        small {
+            font-size: 13px;
+        }
+
+        input[type="text"],
+        input[type="number"] {
             height: 32px;
             padding: 0 8px;
             font-size: 16px;
@@ -101,7 +146,7 @@
         }
 
         .filter {
-            background: #EEE;
+            background-color: #EEE;
             padding: 8px;
         }
 
@@ -114,6 +159,7 @@
 
         .filter-input:focus {
             box-shadow: 0 0 0 1px #4d90fe;
+            border-color: transparent;
         }
 
         ul {
@@ -125,7 +171,7 @@
 
         ul li {
             margin: 0;
-            padding: 6px 10px;
+            padding: 10px 10px;
             border-bottom: 1px solid #DDD;
             cursor: pointer;
         }
@@ -140,11 +186,21 @@
         }
 
         .main {
-            margin-left: 240px;
+            margin-left: 220px;
+            padding: 0 20px;
         }
 
-        h2, p {
+        h1 {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0;
+            padding: 10px 0 0 0;
+            font-family: '游ゴシック', 'Yu Gothic', 'YuGothic', 'Meiryo UI', 'メイリオ', 'MS Pゴシック', sans-serif;
+        }
+
+        p {
             margin: 5px 0;
+            line-height: 1.5;
         }
 
         table {
@@ -196,8 +252,19 @@
             border-radius: 4px;
             background: #27a2db;
             color: #FFF;
-            padding: 5px 10px;
+            padding: 12px 24px;
             cursor: pointer;
+            white-space: nowrap;
+            -webkit-transition: .5s;
+            transition: .5s;
+        }
+
+        button:hover {
+            background-color: #43bded;
+        }
+
+        .delete-button {
+            padding: 5px 10px;
         }
 
         .plus {
@@ -217,13 +284,108 @@
             box-sizing: border-box;
             border-radius: 4px;
         }
+
+        .select-currency {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .desktop-only {
+            display: block;
+        }
+
+        .mobile-only {
+            display: none;
+        }
+
+        @media screen and (max-width: 1200px) {
+            .mobile-only {
+                display: block;
+            }
+
+            .desktop-only {
+                display: none;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: -220px;
+                z-index: 100;
+                background: #FFF;
+                -webkit-transition: left 200ms cubic-bezier(0.645,0.045,0.355,1);
+                transition: left 200ms cubic-bezier(0.645,0.045,0.355,1);
+            }
+
+            .overlay {
+                content: '';
+                display: block;
+                position: fixed;
+                z-index: -1;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: rgba(0, 0, 0, 0);
+                -webkit-transition: all 200ms cubic-bezier(0.645,0.045,0.355,1);
+                transition: all 200ms cubic-bezier(0.645,0.045,0.355,1);
+            }
+
+            app.sidebar-opened .overlay {
+                z-index: 99;
+                background-color: rgba(0, 0, 0, 0.6);
+            }
+
+            app.sidebar-opened .sidebar {
+                left: 0;
+            }
+
+            .main {
+                margin-left: 0;
+                padding: 0 10px;
+            }
+
+            table th,
+            table td {
+                padding: 6px 5px;
+                font-size: 12px;
+            }
+
+            table thead th {
+                padding: 10px 5px;
+            }
+
+            table tfoot th,
+            table tfoot td {
+                padding: 10px 5px;
+            }
+
+            table .currency,
+            table .price-jpy,
+            table .subtotal {
+                white-space: nowrap;
+            }
+
+            input.balance-input {
+                height: 28px;
+                padding: 0 5px;
+            }
+
+            .delete-button {
+                padding: 3px 6px;
+                font-size: 11px;
+            }
+        }
     </style>
 
     <script>
         var AUTO_UPDATE_INTERVAL = 30000; // 30 sec
 
         this.title = document.title;
-        this.total = 0;
+
+        function generateId() {
+            return Math.random().toString(36).substr(2, 10);
+        }
 
         function sortBySymbol(a, b) {
             if (a.symbol < b.symbol) {
@@ -298,17 +460,47 @@
             return session_v2 ? session_v2 : {portfolio: []};
         }
 
-        function saveSession(store) {
-            localStorage.setItem('store_v2', JSON.stringify(store));
+        function saveSession(portfolio) {
+            var session = {
+                portfolio: []
+            };
+
+            portfolio.forEach(function (item) {
+                session.portfolio.push({
+                    currency: item.currency,
+                    balance: item.balance,
+                    memo: item.memo
+                });
+            });
+
+            localStorage.setItem('store_v2', JSON.stringify(session));
+        }
+
+        function restorePortfolioFromSession (data) {
+            var session = getSession();
+            var portfolio = [];
+
+            session.portfolio.forEach(function (item) {
+                var currency = data[item.currency];
+
+                portfolio.push({
+                    uid: generateId(),
+                    symbol: currency.symbol,
+                    currency: currency.id,
+                    balance: item.balance,
+                    memo: item.memo
+                });
+            });
+
+            return portfolio.sort(sortBySymbol);
         }
 
         this.getCurrencyList = function () {
-            var self = this;
             var filter = this.refs.filter.value.toUpperCase();
             var filtered = [];
 
-            self.data.forEach(function (currency) {
-                if (!filter || currency.symbol.toUpperCase().indexOf(filter) !== -1) {
+            this.raw_data.forEach(function (currency) {
+                if (!filter || currency.name.toUpperCase().indexOf(filter) !== -1 || currency.symbol.toUpperCase().indexOf(filter) !== -1) {
                     filtered.push(currency);
                 }
             });
@@ -316,65 +508,56 @@
             return filtered;
         }
 
-        this.getPopulatedPortfolioItems = function () {
-            var self = this;
-            var portfolio = [];
-
-            self.total = 0;
-
-            this.session.portfolio.forEach(function (item) {
-                var data = self.indexed_data[item.currency];
-
-                if (data === undefined) {
-                    return;
-                }
-
-                var single = {
-                    index: portfolio.length,
-                    name: data.name,
-                    symbol: data.symbol,
-                    price_btc: data.price_btc,
-                    price_jpy: data.price_jpy,
-                    change_day: data.percent_change_24h,
-                    change_week: data.percent_change_7d,
-                    balance: item.balance,
-                    subtotal: data.price_jpy * item.balance,
-                    url: 'https://coinmarketcap.com/currencies/' + data.id + '/'
-                };
-
-                self.total += single.subtotal;
-
-                portfolio.push(single);
-            });
-
-            return portfolio.sort(sortBySymbol);
-        }
-
         this.updateBalance = function (e) {
             var item = e.item;
 
-            this.session.portfolio[item.index].balance = e.target.value;
-            saveSession(this.session);
+            item.balance = e.target.value;
+            item.subtotal = item.balance * item.price_jpy;
+
+            saveSession(this.portfolio);
+        }
+
+        this.calculateTotal = function (portfolio) {
+            var data = this.data;
+            var total = 0;
+
+            portfolio.forEach(function (item) {
+                total += item.balance * data[item.currency].price_jpy;
+            });
+
+            return total;
         }
 
         this.addPortfolio = function (e) {
             var item = e.item;
+            var currency = this.data[item.id];
 
-            this.session.portfolio.push({
-                currency: item.id,
-                balance: 0,
+            this.portfolio.push({
+                uid: generateId(),
+                symbol: currency.symbol,
+                currency: currency.id,
+                balance: '',
                 memo: ''
             });
 
-            saveSession(this.session);
+            this.portfolio.sort(sortBySymbol);
+
+            saveSession(this.portfolio);
+
+            document.querySelector('app').classList.remove('sidebar-opened');
         }
 
         this.deletePortfolio = function (e) {
             var item = e.item;
+            var index = this.portfolio.indexOf(item);
 
-            delete this.session.portfolio.splice(item.index, 1);
+            delete this.portfolio.splice(index, 1);
 
-            saveSession(this.session);
+            saveSession(this.portfolio);
+        }
+
+        this.toggleSidebar = function () {
+            document.querySelector('app').classList.toggle('sidebar-opened');
         }
 
         this.startAutoUpdate = function () {
@@ -389,16 +572,16 @@
                         return response.json();
                     })
                     .then(function (data) {
-                        self.data = data;
-                        self.indexed_data = indexMarketDataById(data);
+                        self.raw_data = data;
+                        self.data = indexMarketDataById(data);
                         self.update();
                     });
             }, AUTO_UPDATE_INTERVAL);
         }
 
-        this.data = opts.initial_data;
-        this.indexed_data = indexMarketDataById(this.data);
-        this.session = getSession();
+        this.raw_data = opts.initial_data;
+        this.data = indexMarketDataById(opts.initial_data);
+        this.portfolio = restorePortfolioFromSession(this.data);
         this.startAutoUpdate();
     </script>
 
