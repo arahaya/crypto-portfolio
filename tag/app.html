@@ -483,6 +483,10 @@
             session.portfolio.forEach(function (item) {
                 var currency = data[item.currency];
 
+                if (!currency) {
+                    return;
+                }
+
                 portfolio.push({
                     uid: generateId(),
                     symbol: currency.symbol,
