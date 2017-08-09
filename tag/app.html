@@ -36,15 +36,15 @@
                 <tbody>
                     <tr each={ portfolio }>
                         <td class="currency">
-                            <a href="https://coinmarketcap.com/currencies/{ currency }/" target="_blank" rel="noreferrer noopener">{ data[currency].name } ({ data[currency].symbol })</a>
+                            <a href="https://coinmarketcap.com/currencies/{ currency }/" target="_blank" rel="noreferrer noopener">{ currency_data[currency].name } ({ currency_data[currency].symbol })</a>
                         </td>
-                        <td class="price-btc">{ data[currency].price_btc }</td>
-                        <td class="price-jpy">{ number_format(data[currency].price_jpy, 2) }円</td>
-                        <td class="change-week"><span class="{ plus: data[currency].percent_change_7d >= 0, minus: data[currency].percent_change_7d < 0 }">{ number_format(data[currency].percent_change_7d, 2) }%</span></td>
-                        <td class="change-day"><span class="{ plus: data[currency].percent_change_24h >= 0, minus: data[currency].percent_change_24h < 0 }">{ number_format(data[currency].percent_change_24h, 2) }%</span></td>
+                        <td class="price-btc">{ currency_data[currency].price_btc }</td>
+                        <td class="price-jpy">{ number_format(currency_data[currency].price_jpy, 2) }円</td>
+                        <td class="change-week"><span class="{ plus: currency_data[currency].percent_change_7d >= 0, minus: currency_data[currency].percent_change_7d < 0 }">{ number_format(currency_data[currency].percent_change_7d, 2) }%</span></td>
+                        <td class="change-day"><span class="{ plus: currency_data[currency].percent_change_24h >= 0, minus: currency_data[currency].percent_change_24h < 0 }">{ number_format(currency_data[currency].percent_change_24h, 2) }%</span></td>
                         <td class="balance"><input type="number" class="balance-input" value="{ balance }" oninput="{ updateBalance }"></td>
-                        <td class="subtotal">{ number_format(balance * data[currency].price_jpy) }円</td>
-                        <td class="percentage">{ number_format((balance * data[currency].price_jpy) / calculateTotal(portfolio) * 100, 2) }%</td>
+                        <td class="subtotal">{ number_format(balance * currency_data[currency].price_jpy) }円</td>
+                        <td class="percentage">{ number_format((balance * currency_data[currency].price_jpy) / calculateTotal(portfolio) * 100, 2) }%</td>
                         <td class="delete"><button class="delete-button" onclick={ deletePortfolio }>削除</button></td>
                     </tr>
                 </tbody>
@@ -70,11 +70,11 @@
                 <tbody>
                     <tr each={ portfolio }>
                         <td class="currency">
-                            <a href="https://coinmarketcap.com/currencies/{ currency }/" target="_blank" rel="noreferrer noopener">{ data[currency].symbol }</a>
+                            <a href="https://coinmarketcap.com/currencies/{ currency }/" target="_blank" rel="noreferrer noopener">{ currency_data[currency].symbol }</a>
                         </td>
-                        <td class="price-jpy">{ number_format(data[currency].price_jpy, 2) }</td>
+                        <td class="price-jpy">{ number_format(currency_data[currency].price_jpy, 2) }</td>
                         <td class="balance"><input type="number" class="balance-input" value="{ balance }" oninput="{ updateBalance }"></td>
-                        <td class="subtotal">{ number_format(balance * data[currency].price_jpy) }</td>
+                        <td class="subtotal">{ number_format(balance * currency_data[currency].price_jpy) }</td>
                         <td class="delete"><button class="delete-button" onclick={ deletePortfolio }>削除</button></td>
                     </tr>
                 </tbody>
@@ -433,8 +433,8 @@
                                     currency = 'XLM';
                                 }
 
-                                for (var i = 0, l = this.data.length; i < l; i++) {
-                                    var d = this.data[i];
+                                for (var i = 0, l = this.currency_data.length; i < l; i++) {
+                                    var d = this.currency_data[i];
 
                                     if (d.symbol == currency) {
                                         currency_id = d.id;
@@ -476,12 +476,12 @@
             localStorage.setItem('store_v2', JSON.stringify(session));
         }
 
-        function restorePortfolioFromSession (data) {
+        function restorePortfolioFromSession (currency_data) {
             var session = getSession();
             var portfolio = [];
 
             session.portfolio.forEach(function (item) {
-                var currency = data[item.currency];
+                var currency = currency_data[item.currency];
 
                 if (!currency) {
                     return;
@@ -522,11 +522,11 @@
         }
 
         this.calculateTotal = function (portfolio) {
-            var data = this.data;
+            var currency_data = this.currency_data;
             var total = 0;
 
             portfolio.forEach(function (item) {
-                total += item.balance * data[item.currency].price_jpy;
+                total += item.balance * currency_data[item.currency].price_jpy;
             });
 
             return total;
@@ -534,7 +534,7 @@
 
         this.addPortfolio = function (e) {
             var item = e.item;
-            var currency = this.data[item.id];
+            var currency = this.currency_data[item.id];
 
             this.portfolio.push({
                 uid: generateId(),
@@ -577,15 +577,15 @@
                     })
                     .then(function (data) {
                         self.raw_data = data;
-                        self.data = indexMarketDataById(data);
+                        self.currency_data = indexMarketDataById(data);
                         self.update();
                     });
             }, AUTO_UPDATE_INTERVAL);
         }
 
         this.raw_data = opts.initial_data;
-        this.data = indexMarketDataById(opts.initial_data);
-        this.portfolio = restorePortfolioFromSession(this.data);
+        this.currency_data = indexMarketDataById(opts.initial_data);
+        this.portfolio = restorePortfolioFromSession(this.currency_data);
         this.startAutoUpdate();
     </script>
 
