@@ -529,6 +529,9 @@
                 total += item.balance * currency_data[item.currency].price_jpy;
             });
 
+            // ページタイトルを更新
+            document.title = number_format(total) + "円 - " + this.title;
+
             return total;
         }
 
