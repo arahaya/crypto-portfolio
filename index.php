@@ -2,7 +2,7 @@
 
 define('CACHE_DIR', './cache');
 define('CACHE_LIFETIME', 60);
-define('COINMARKETCAP_TICKER_API', 'https://api.coinmarketcap.com/v1/ticker/?convert=JPY');
+define('COINMARKETCAP_TICKER_API', 'https://api.coinmarketcap.com/v1/ticker/?limit=0&convert=JPY');
 
 function get_from_cache_or_remote($cache, $remote) {
     $cache_path = CACHE_DIR . '/' . $cache;
