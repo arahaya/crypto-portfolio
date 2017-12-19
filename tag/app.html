@@ -51,7 +51,8 @@
                 <tfoot>
                     <tr>
                         <th colspan="6">合計</th>
-                        <td colspan="3">{ number_format(calculateTotal(portfolio)) }円</td>
+                        <td colspan="1">{ number_format(calculateTotal(portfolio)) }円</td>
+                        <td colspan="2">{ number_format(calculateTotal(portfolio, 'btc'), 8) } BTC</td>
                     </tr>
                 </tfoot>
             </table>
@@ -81,7 +82,8 @@
                 <tfoot>
                     <tr>
                         <th colspan="3">合計</th>
-                        <td colspan="2">{ number_format(calculateTotal(portfolio)) }円</td>
+                        <td colspan="1">{ number_format(calculateTotal(portfolio)) }円</td>
+                        <td colspan="1">{ number_format(calculateTotal(portfolio, 'btc'), 8) } BTC</td>
                     </tr>
                 </tfoot>
             </table>
@@ -524,16 +526,13 @@
             saveSession(this.portfolio);
         }
 
-        this.calculateTotal = function (portfolio) {
+        this.calculateTotal = function (portfolio, currency) {
             var currency_data = this.currency_data;
             var total = 0;
 
             portfolio.forEach(function (item) {
-                total += item.balance * currency_data[item.currency].price_jpy;
+                total += item.balance * currency_data[item.currency]['price_' + (currency || 'jpy')];
             });
-
-            // ページタイトルを更新
-            document.title = number_format(total) + "円 - " + this.title;
 
             return total;
         }
@@ -588,6 +587,14 @@
                     });
             }, AUTO_UPDATE_INTERVAL);
         }
+
+        this.updatePageTitle = function () {
+            // ページタイトルを更新
+            document.title = number_format(this.calculateTotal(this.portfolio)) + "円 - " + this.title;
+        }
+
+        this.on('mount', this.updatePageTitle);
+        this.on('updated', this.updatePageTitle);
 
         this.raw_data = opts.initial_data;
         this.currency_data = indexMarketDataById(opts.initial_data);
