@@ -67,26 +67,53 @@ if (!window.localStorage) {
     });
 }
 
-// https://stackoverflow.com/a/34817120/108156
-function number_format(number,decimals,dec_point,thousands_sep) {
-    // makes sure `number` is numeric value
-    number = number * 1;
-    // multiply by decimals
-    number = number * Math.pow(10, decimals ? decimals : 0);
-    // round
-    number = Math.round(number);
-    // devide by decimals
-    number = number / Math.pow(10, decimals ? decimals : 0);
+// modified https://stackoverflow.com/a/34817120/108156
+function number_format(number, decimals, options) {
+    number   = Number(number);
+    decimals = decimals || 0;
+    options  = options  || {};
+    var thousands_separator = options.thousands_separator || ',';
+    var decimal_point       = options.decimal_point       || '.';
+    var with_jp_prefix      = options.with_jp_prefix      || false;
+    var significant_figures = options.significant_figures || null;
 
-    var str = number.toFixed(decimals ? decimals : 0).toString().split('.');
-    var parts = [];
+    var PREFIX_CRITERIA = 3;
 
-    for (var i = str[0].length; i > 0; i -= 3) {
-        parts.unshift(str[0].substring(Math.max(0, i - 3), i));
+    var round = function (num, dec) {
+      num = num * Math.pow(10, dec);
+      num = Math.round(num);
+      return num / Math.pow(10, dec);
     }
 
-    str[0] = parts.join(thousands_sep ? thousands_sep : ',');
-    return str.join(dec_point ? dec_point : '.');
+    var prefix_offset = 0;
+    if (with_jp_prefix) {
+        if (number >= Math.pow(10, 4 + PREFIX_CRITERIA)) {
+            prefix_offset = 4;
+        }
+        number = number / Math.pow(10, prefix_offset);
+    }
+
+    if (significant_figures && number < Math.pow(10, significant_figures - decimals)) {
+        decimals = significant_figures - 1 - Math.floor(Math.log(number) / Math.log(10));
+    }
+
+    number = round(number, decimals);
+
+    var strs = number.toFixed(decimals).toString().split('.');
+
+    var parts = [];
+    for (var i = strs[0].length; i > 0; i -= 3) {
+        parts.unshift(strs[0].substring(Math.max(0, i - 3), i));
+    }
+    strs[0] = parts.join(thousands_separator);
+
+    var number_str = strs.join(decimal_point);
+
+    if (prefix_offset === 4) {
+        number_str = number_str + '万';
+    }
+
+    return number_str
 }
 
 function startsWith(haystack, needle){
