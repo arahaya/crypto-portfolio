@@ -577,6 +577,9 @@
         }
 
         this.deletePortfolio = function (e) {
+            if (! window.confirm('この通貨を削除してもよろしいか？')) {
+                return false;
+            }
             var item = e.item;
             var index = this.portfolio.indexOf(item);
 
