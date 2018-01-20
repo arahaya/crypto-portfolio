@@ -55,6 +55,7 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && ($_SERVER['HTTP_X_REQUESTED_WITH
     <meta name="viewport" id="viewport" content="width=device-width">
     <title>幻想計算機</title>
     <meta name="description" content="暗号通貨（仮想通貨）の幻想総資産を日本円でわかりやすく管理">
+    <link rel="stylesheet" href="https://unpkg.com/blaze@3.6.3/dist/blaze.min.css">
     <style>
         html, body {
             height: 100%;
@@ -66,22 +67,27 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && ($_SERVER['HTTP_X_REQUESTED_WITH
             -webkit-text-size-adjust: 100%;
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/riot@3.8/riot+compiler.min.js"></script>
+    <script src="js/fetch.js"></script>
+    <script src="js/utils.js"></script>
 </head>
 <body>
 
     <app></app>
 
-    <script src="js/fetch.js"></script>
-    <script src="js/utils.js"></script>
+    <script src="tag/modal.html" type="riot/tag"></script>
     <script src="tag/app.html" type="riot/tag"></script>
-    <script src="js/riot-compiler.min.js"></script>
 
     <script>
-        var data = <?= $data ?>;
+        (function () {
+            var dispatcher = riot.observable();
+            var data = <?= $data ?>;
 
-        riot.mount('app', {
-            initial_data: data
-        });
+            riot.mount('app', {
+                initial_data: data,
+                dispatcher: dispatcher
+            });
+        })();
     </script>
 
 </body>
