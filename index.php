@@ -53,8 +53,8 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && ($_SERVER['HTTP_X_REQUESTED_WITH
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" id="viewport" content="width=device-width">
-    <title>赤字計算機</title>
-    <meta name="description" content="暗号通貨（仮想通貨）の赤字を日本円でわかりやすく管理">
+    <title>幻想計算機</title>
+    <meta name="description" content="暗号通貨（仮想通貨）の幻想総資産を日本円でわかりやすく管理">
     <style>
         html, body {
             height: 100%;
