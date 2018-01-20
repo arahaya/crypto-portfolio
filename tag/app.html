@@ -30,6 +30,7 @@
                         <th class="balance">保有枚数</th>
                         <th class="subtotal">小計</th>
                         <th class="percentage">資産割合</th>
+                        <th class="memo">メモ</th>
                         <th class="delete">削除</th>
                     </tr>
                 </thead>
@@ -45,6 +46,7 @@
                         <td class="balance"><input type="number" class="balance-input" value="{ balance }" oninput="{ updateBalance }"></td>
                         <td class="subtotal">{ number_format(balance * currency_data[currency].price_jpy) }円</td>
                         <td class="percentage">{ number_format((balance * currency_data[currency].price_jpy) / calculateTotal(portfolio) * 100, 2) }%</td>
+                        <td class="memo"><input type="text" class="memo-input" value="{ memo }" oninput="{ updateMemo }" autocomplete="off"></td>
                         <td class="delete"><button class="delete-button" onclick={ deletePortfolio }>削除</button></td>
                     </tr>
                 </tbody>
@@ -54,7 +56,7 @@
                         <td class="total">
                           { number_format(calculateTotal(portfolio), 0, { with_jp_prefix: true }) }円
                         </td>
-                        <td colspan="2" class="total">
+                        <td colspan="3" class="total">
                           { number_format(calculateTotal(portfolio, 'btc'), 8) } BTC
                         </td>
                     </tr>
@@ -85,6 +87,7 @@
                                    key={ uid }
                                    data={ currency_data[currency] }
                                    balance={ balance }
+                                   memo={ memo }
                                    dispatcher={ opts.dispatcher }>
                                 <table>
                                     <tr>
@@ -98,6 +101,10 @@
                                     <tr>
                                         <th>資産割合</th>
                                         <td class="percentage">{ number_format((opts.balance * opts.data.price_jpy) / parent.calculateTotal(parent.portfolio) * 100, 2) }%</td>
+                                    </tr>
+                                    <tr>
+                                        <th>メモ</th>
+                                        <td class="memo"><input type="text" class="memo-input" value="{ opts.memo }" oninput="{ parent.updateMemo.bind(parent) }" autocomplete="off"></td>
                                     </tr>
                                     <tr>
                                         <th>削除</th>
@@ -125,6 +132,7 @@
             </div>
         </div>
         <p>
+            <small>※幻想計算機は赤字計算機をベースに作成しています。</small><br>
             <small>※coinmarketcap.com掲載の通貨に対応しています。</small><br>
             <small>※レートは5分程度で更新されます。</small><br>
             <small>※入力された内容はブラウザのローカルストレージに保管され、サーバには送信されません。</small><br>
@@ -333,6 +341,12 @@
         .balance-input {
             width: 100%;
             text-align: right;
+            box-sizing: border-box;
+            border-radius: 4px;
+        }
+
+        .memo-input {
+            width: 100%;
             box-sizing: border-box;
             border-radius: 4px;
         }
@@ -571,6 +585,14 @@
 
             item.balance = e.target.value;
             item.subtotal = item.balance * item.price_jpy;
+
+            saveSession(this.portfolio);
+        }
+
+        this.updateMemo = function (e) {
+            var item = e.item;
+
+            item.memo = e.target.value;
 
             saveSession(this.portfolio);
         }
