@@ -1,3 +1,4 @@
 # crypto-portfolio
-暗号通貨 赤字計算機  
-http://crypto-portfolio.azurewebsites.net/
+暗号通貨 幻想計算機  
+
+幻想計算機は、 [赤字計算機](https://github.com/arahaya/crypto-portfolio) を独断と偏見で改良したものです。
