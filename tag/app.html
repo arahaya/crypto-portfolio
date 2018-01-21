@@ -69,7 +69,7 @@
                     <tr>
                         <th class="currency">通貨</th>
                         <th class="price-jpy">価格(JPY)</th>
-                        <th class="balance">保有枚数</th>
+                        <th class="change-day">上昇率(24h)</th>
                         <th class="subtotal">小計</th>
                         <th class="detail">詳細</th>
                     </tr>
@@ -80,7 +80,7 @@
                             <a href="https://coinmarketcap.com/currencies/{ currency }/" target="_blank" rel="noreferrer noopener">{ currency_data[currency].symbol }</a>
                         </td>
                         <td class="price-jpy">{ number_format(currency_data[currency].price_jpy, 0, { with_jp_prefix: true, significant_figures: 3 }) }</td>
-                        <td class="balance"><input type="number" class="balance-input" value="{ balance }" oninput="{ updateBalance }"></td>
+                        <td class="change-day"><span class="{ plus: currency_data[currency].percent_change_24h >= 0, minus: currency_data[currency].percent_change_24h < 0 }">{ number_format(currency_data[currency].percent_change_24h, 2) }%</span></td>
                         <td class="subtotal">{ number_format(balance * currency_data[currency].price_jpy) }</td>
                         <td class="detail">
                             <modal title={ currency_data[currency].symbol + 'の詳細' }
@@ -90,6 +90,14 @@
                                    memo={ memo }
                                    dispatcher={ opts.dispatcher }>
                                 <table>
+                                    <tr>
+                                        <th>価格(BTC)</th>
+                                        <td class="price-btc">{ opts.data.price_btc }</td>
+                                    </tr>
+                                    <tr>
+                                        <th>価格(JPY)</th>
+                                        <td class="price-jpy">{ number_format(opts.data.price_jpy, 0, { with_jp_prefix: true, significant_figures: 3 }) }</td>
+                                    </tr>
                                     <tr>
                                         <th>上昇率(7日間)</th>
                                         <td class="change-week"><span class="{ plus: opts.data.percent_change_7d >= 0, minus: opts.data.percent_change_7d < 0 }">{ number_format(opts.data.percent_change_7d, 2) }%</span></td>
@@ -101,6 +109,10 @@
                                     <tr>
                                         <th>資産割合</th>
                                         <td class="percentage">{ number_format((opts.balance * opts.data.price_jpy) / parent.calculateTotal(parent.portfolio) * 100, 2) }%</td>
+                                    </tr>
+                                    <tr>
+                                        <th>保有枚数</th>
+                                        <td class="balance"><input type="number" class="balance-input" value="{ opts.balance }" oninput="{ parent.updateBalance.bind(parent) }"></td>
                                     </tr>
                                     <tr>
                                         <th>メモ</th>
@@ -327,6 +339,7 @@
         }
 
         /* table td.price-btc, 左揃えの方が見やすいから除外 */
+        .detail modal table td.price-btc, /* ただし、詳細モーダルでは右揃え */
         table td.price-jpy,
         table td.change-week,
         table td.change-day,
@@ -587,6 +600,8 @@
             item.subtotal = item.balance * item.price_jpy;
 
             saveSession(this.portfolio);
+
+            this.update();
         }
 
         this.updateMemo = function (e) {
