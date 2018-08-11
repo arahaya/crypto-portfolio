@@ -67,6 +67,9 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && ($_SERVER['HTTP_X_REQUESTED_WITH
             -webkit-text-size-adjust: 100%;
         }
     </style>
+<?php
+    include('./firebase-config.php');
+?>
     <script src="https://cdn.jsdelivr.net/npm/riot@3.8/riot+compiler.min.js"></script>
     <script src="js/fetch.js"></script>
     <script src="js/utils.js"></script>
