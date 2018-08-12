@@ -463,6 +463,7 @@
         var AUTO_UPDATE_INTERVAL = 30000; // 30 sec
 
         this.title = document.title;
+        this.sessionManager = new SessionManager(new LocalStorage());
 
         function generateId() {
             return Math.random().toString(36).substr(2, 10);
@@ -492,73 +493,8 @@
             return indexData(data, 'id');
         }
 
-        function getSession() {
-            var session_v1 = localStorage.getItem('store');
-            var session_v2 = localStorage.getItem('store_v2');
-
-            session_v1 = session_v1 ? JSON.parse(session_v1) : null;
-            session_v2 = session_v2 ? JSON.parse(session_v2) : null;
-
-            if (session_v1 && !session_v2) {
-                session_v2 = {portfolio: []};
-
-                for (var exchange in session_v1) {
-                    if (session_v1.hasOwnProperty(exchange)) {
-                        for (var currency in session_v1[exchange]) {
-                            if (session_v1[exchange].hasOwnProperty(currency)) {
-                                var balance = session_v1[exchange][currency];
-                                var currency_id;
-
-                                // Polo Stellar fix
-                                if (currency == 'STR') {
-                                    currency = 'XLM';
-                                }
-
-                                for (var i = 0, l = this.currency_data.length; i < l; i++) {
-                                    var d = this.currency_data[i];
-
-                                    if (d.symbol == currency) {
-                                        currency_id = d.id;
-                                        break;
-                                    }
-                                }
-
-                                if (!currency_id) {
-                                    continue;
-                                }
-
-                                session_v2.portfolio.push({
-                                    currency: currency_id,
-                                    balance: balance,
-                                    memo: ''
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-
-            return session_v2 ? session_v2 : {portfolio: []};
-        }
-
-        function saveSession(portfolio) {
-            var session = {
-                portfolio: []
-            };
-
-            portfolio.forEach(function (item) {
-                session.portfolio.push({
-                    currency: item.currency,
-                    balance: item.balance,
-                    memo: item.memo
-                });
-            });
-
-            localStorage.setItem('store_v2', JSON.stringify(session));
-        }
-
-        function restorePortfolioFromSession (currency_data) {
-            var session = getSession();
+        function restorePortfolioFromSession(sessionManager, currency_data) {
+            var session = sessionManager.getSession();
             var portfolio = [];
 
             session.portfolio.forEach(function (item) {
@@ -599,7 +535,7 @@
             item.balance = e.target.value;
             item.subtotal = item.balance * item.price_jpy;
 
-            saveSession(this.portfolio);
+            this.sessionManager.saveSession(this.portfolio);
 
             this.update();
         }
@@ -609,7 +545,7 @@
 
             item.memo = e.target.value;
 
-            saveSession(this.portfolio);
+            this.sessionManager.saveSession(this.portfolio);
         }
 
         this.calculateTotal = function (portfolio, currency) {
@@ -637,7 +573,7 @@
 
             this.portfolio.sort(sortBySymbol);
 
-            saveSession(this.portfolio);
+            this.sessionManager.saveSession(this.portfolio);
 
             document.querySelector('app').classList.remove('sidebar-opened');
         }
@@ -653,7 +589,7 @@
             if (index >= 0) {
               delete this.portfolio.splice(index, 1);
 
-              saveSession(this.portfolio);
+              this.sessionManager.saveSession(this.portfolio);
 
               this.update();
             }
@@ -697,7 +633,7 @@
 
         this.raw_data = opts.initial_data;
         this.currency_data = indexMarketDataById(opts.initial_data);
-        this.portfolio = restorePortfolioFromSession(this.currency_data);
+        this.portfolio = restorePortfolioFromSession(this.sessionManager, this.currency_data);
         this.startAutoUpdate();
     </script>
 

@@ -78,6 +78,7 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && ($_SERVER['HTTP_X_REQUESTED_WITH
     <script src="https://cdn.firebase.com/libs/firebaseui/3.1.1/firebaseui.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/riot@3.8/riot+compiler.min.js"></script>
     <script src="js/fetch.js"></script>
+    <script src="js/session-manager.js"></script>
     <script src="js/utils.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function(event) {
