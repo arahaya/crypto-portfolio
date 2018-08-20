@@ -463,7 +463,6 @@
         var AUTO_UPDATE_INTERVAL = 30000; // 30 sec
 
         this.title = document.title;
-        this.sessionManager = new SessionManager(new LocalStorage());
 
         function generateId() {
             return Math.random().toString(36).substr(2, 10);
@@ -493,27 +492,28 @@
             return indexData(data, 'id');
         }
 
-        function restorePortfolioFromSession(sessionManager, currency_data) {
-            var session = sessionManager.getSession();
-            var portfolio = [];
+        function getPortfolioFromSession(sessionManager, currency_data, callback) {
+            sessionManager.getSession(function (session) {
+                var portfolio = [];
 
-            session.portfolio.forEach(function (item) {
-                var currency = currency_data[item.currency];
+                session.portfolio.forEach(function (item) {
+                    var currency = currency_data[item.currency];
 
-                if (!currency) {
-                    return;
-                }
+                    if (!currency) {
+                        return;
+                    }
 
-                portfolio.push({
-                    uid: generateId(),
-                    symbol: currency.symbol,
-                    currency: currency.id,
-                    balance: item.balance,
-                    memo: item.memo
+                    portfolio.push({
+                        uid: generateId(),
+                        symbol: currency.symbol,
+                        currency: currency.id,
+                        balance: item.balance,
+                        memo: item.memo
+                    });
                 });
-            });
 
-            return portfolio.sort(sortBySymbol);
+                callback(portfolio.sort(sortBySymbol));
+            });
         }
 
         this.getCurrencyList = function () {
@@ -535,9 +535,9 @@
             item.balance = e.target.value;
             item.subtotal = item.balance * item.price_jpy;
 
-            this.sessionManager.saveSession(this.portfolio);
-
-            this.update();
+            this.sessionManager.saveSession(this.portfolio, function () {
+                this.update();
+            }.bind(this));
         }
 
         this.updateMemo = function (e) {
@@ -573,9 +573,9 @@
 
             this.portfolio.sort(sortBySymbol);
 
-            this.sessionManager.saveSession(this.portfolio);
-
-            document.querySelector('app').classList.remove('sidebar-opened');
+            this.sessionManager.saveSession(this.portfolio, function () {
+                document.querySelector('app').classList.remove('sidebar-opened');
+            });
         }
 
         this.deletePortfolio = function (e) {
@@ -628,13 +628,23 @@
             opts.dispatcher.trigger('modal-show[' + item.uid + ']', item)
         }
 
-        this.on('mount', this.updatePageTitle);
-        this.on('updated', this.updatePageTitle);
+        this.setSessionManager = function (onChanged) {
+            onChanged = onChanged.bind(this);
+            this.sessionManager = new SessionManager(new LocalStorage());
+            onChanged();
+        }.bind(this);
 
-        this.raw_data = opts.initial_data;
-        this.currency_data = indexMarketDataById(opts.initial_data);
-        this.portfolio = restorePortfolioFromSession(this.sessionManager, this.currency_data);
-        this.startAutoUpdate();
+        this.setSessionManager(function () {
+            this.on('mount', this.updatePageTitle);
+            this.on('updated', this.updatePageTitle);
+
+            this.raw_data = opts.initial_data;
+            this.currency_data = indexMarketDataById(opts.initial_data);
+            getPortfolioFromSession(this.sessionManager, this.currency_data, function (portfolio) {
+                this.portfolio = portfolio;
+                this.startAutoUpdate();
+            }.bind(this));
+        });
     </script>
 
 </app>

@@ -101,7 +101,6 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && ($_SERVER['HTTP_X_REQUESTED_WITH
             var signOutArea = document.getElementById('firebase-auth-sign-out');
             if (user) {
                 // User is signed in.
-                console.log(user);
                 user.getIdToken().then(function(accessToken) {
                     document.getElementById('firebase-auth-message').textContent = user.email + 'でログイン中です';
                 });
@@ -110,7 +109,6 @@ if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && ($_SERVER['HTTP_X_REQUESTED_WITH
                 }
             } else {
                 // User is signed out.
-                console.log('Not signed in');
                 document.getElementById('firebase-auth-message').textContent = 'ログインしていません';
                 if (signOutArea.contains(signOutButton)) {
                     signOutArea.removeChild(signOutButton);
