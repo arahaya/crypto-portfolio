@@ -628,23 +628,38 @@
             opts.dispatcher.trigger('modal-show[' + item.uid + ']', item)
         }
 
-        this.setSessionManager = function (onChanged) {
+        this.setSessionManager = function (storageType, onChanged) {
             onChanged = onChanged.bind(this);
-            this.sessionManager = new SessionManager(new LocalStorage());
-            onChanged();
+            if (storageType === 'firebase') {
+                var unsubscribe = firebase.auth().onAuthStateChanged(function (user) {
+                    if (user) {
+                        this.sessionManager = new SessionManager(new Firestore('portfolios', user.uid));
+                        onChanged();
+                        unsubscribe();
+                    }
+                }.bind(this));
+            } else {
+                this.sessionManager = new SessionManager(new LocalStorage());
+                onChanged();
+            }
         }.bind(this);
 
-        this.setSessionManager(function () {
-            this.on('mount', this.updatePageTitle);
-            this.on('updated', this.updatePageTitle);
+        this.portfolio = [];
+        this.raw_data = opts.initial_data;
+        this.currency_data = indexMarketDataById(opts.initial_data);
 
-            this.raw_data = opts.initial_data;
-            this.currency_data = indexMarketDataById(opts.initial_data);
-            getPortfolioFromSession(this.sessionManager, this.currency_data, function (portfolio) {
-                this.portfolio = portfolio;
-                this.startAutoUpdate();
-            }.bind(this));
-        });
+        this.on('mount', this.updatePageTitle);
+        this.on('updated', this.updatePageTitle);
+
+        new LocalStorage().getItem('storage_type', function (storageType) {
+            this.setSessionManager(storageType, function () {
+                getPortfolioFromSession(this.sessionManager, this.currency_data, function (portfolio) {
+                    this.portfolio = portfolio;
+                    this.update();
+                    this.startAutoUpdate();
+                }.bind(this));
+            });
+        }.bind(this));
     </script>
 
 </app>

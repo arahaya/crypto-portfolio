@@ -1,13 +1,18 @@
 <script src="https://www.gstatic.com/firebasejs/5.3.1/firebase.js"></script>
 <script>
+(function () {
     // Initialize Firebase
-    var config = {
+    firebase.initializeApp({
         apiKey: "xxxx",
         authDomain: "xxxx.firebaseapp.com",
         databaseURL: "https://xxxx.firebaseio.com",
         projectId: "xxxx",
         storageBucket: "xxxx.appspot.com",
         messagingSenderId: "xxxx"
-    };
-    firebase.initializeApp(config);
+    });
+    const firestore = firebase.firestore();
+    firestore.settings({
+        timestampsInSnapshots: true
+    });
+})();
 </script>

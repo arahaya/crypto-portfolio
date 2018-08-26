@@ -20,6 +20,34 @@
         localStorage.setItem(key, JSON.stringify(item));
         callback && callback();
     }
+
+    window.Firestore = function (collection, userId) {
+        Storage.call(this);
+        this.db = firebase.firestore().collection(collection);
+        this.userId = userId;
+    }
+
+    Firestore.prototype = Object.create(Storage.prototype);
+    Firestore.prototype.constructor = Firestore;
+
+    Firestore.prototype.getItem = function (key, callback) {
+        this.db.doc(this.userId).get().then(function (doc) {
+            callback(doc.exists ? doc.data()[key] : null);
+        }).catch(function(error) {
+            console.error(error);
+            callback(null);
+        });
+    }
+
+    Firestore.prototype.setItem = function (key, item, callback) {
+        var data = {};
+        data[key] = item;
+        this.db.doc(this.userId).set(data, { merge: true }).then(function () {
+            callback && callback();
+        }).catch(function(error) {
+            console.error(error);
+        });
+    }
 })(void 0);
 
 (function (undefined) {
