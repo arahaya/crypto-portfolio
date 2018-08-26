@@ -93,7 +93,7 @@ function number_format(number, decimals, options) {
         number = number / Math.pow(10, prefix_offset);
     }
 
-    if (significant_figures && number < Math.pow(10, significant_figures - decimals)) {
+    if (number > 0 && significant_figures && number < Math.pow(10, significant_figures - decimals)) {
         decimals = significant_figures - 1 - Math.floor(Math.log(number) / Math.log(10));
     }
 
