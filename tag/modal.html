@@ -1,0 +1,60 @@
+<modal>
+  <div class={ hidden: ! display }>
+    <div class="c-overlay c-overlay--visible" onclick={ dismiss }></div>
+    <div class="o-modal">
+      <div class="c-card">
+        <header class="c-card__header">
+          <button type="button" class="c-button c-button--close" onclick={ dismiss }>&times;</button>
+          <h2 class="c-heading">{ opts.title }</h2>
+        </header>
+        <div class="c-card__body">
+          <yield />
+        </div>
+        <footer class="c-card__footer">
+          <button type="button" class="c-button c-button--brand" onclick={ dismiss }>Close</button>
+        </footer>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    modal .hidden {
+      display: none;
+    }
+  </style>
+
+  <script>
+    var self = this
+
+    var key = opts.key || null
+    var showEventName    = opts.showEventName    || 'modal-show'
+    var dismissEventName = opts.dismissEventName || 'modal-dismiss'
+
+    if (key) {
+      showEventName    = showEventName    + '[' + key + ']'
+      dismissEventName = dismissEventName + '[' + key + ']'
+    }
+
+    show() {
+      this.update({
+        display: true
+      })
+    }
+
+    dismiss() {
+      this.update({
+        display: false
+      })
+    }
+
+    opts.dispatcher.on(showEventName, function (params) {
+      self.show()
+    })
+
+    opts.dispatcher.on(dismissEventName, function () {
+      self.dismiss()
+    })
+
+    this.dismiss()
+  </script>
+</modal>

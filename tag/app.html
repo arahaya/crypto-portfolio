@@ -30,6 +30,7 @@
                         <th class="balance">保有枚数</th>
                         <th class="subtotal">小計</th>
                         <th class="percentage">資産割合</th>
+                        <th class="memo">メモ</th>
                         <th class="delete">削除</th>
                     </tr>
                 </thead>
@@ -39,20 +40,25 @@
                             <a href="https://coinmarketcap.com/currencies/{ currency }/" target="_blank" rel="noreferrer noopener">{ currency_data[currency].name } ({ currency_data[currency].symbol })</a>
                         </td>
                         <td class="price-btc">{ currency_data[currency].price_btc }</td>
-                        <td class="price-jpy">{ number_format(currency_data[currency].price_jpy, 2) }円</td>
+                        <td class="price-jpy">{ number_format(currency_data[currency].price_jpy, 0, { with_jp_prefix: true, significant_figures: 3 }) }円</td>
                         <td class="change-week"><span class="{ plus: currency_data[currency].percent_change_7d >= 0, minus: currency_data[currency].percent_change_7d < 0 }">{ number_format(currency_data[currency].percent_change_7d, 2) }%</span></td>
                         <td class="change-day"><span class="{ plus: currency_data[currency].percent_change_24h >= 0, minus: currency_data[currency].percent_change_24h < 0 }">{ number_format(currency_data[currency].percent_change_24h, 2) }%</span></td>
                         <td class="balance"><input type="number" class="balance-input" value="{ balance }" oninput="{ updateBalance }"></td>
                         <td class="subtotal">{ number_format(balance * currency_data[currency].price_jpy) }円</td>
                         <td class="percentage">{ number_format((balance * currency_data[currency].price_jpy) / calculateTotal(portfolio) * 100, 2) }%</td>
+                        <td class="memo"><input type="text" class="memo-input" value="{ memo }" oninput="{ updateMemo }" autocomplete="off"></td>
                         <td class="delete"><button class="delete-button" onclick={ deletePortfolio }>削除</button></td>
                     </tr>
                 </tbody>
                 <tfoot>
                     <tr>
                         <th colspan="6">合計</th>
-                        <td colspan="1">{ number_format(calculateTotal(portfolio)) }円</td>
-                        <td colspan="2">{ number_format(calculateTotal(portfolio, 'btc'), 8) } BTC</td>
+                        <td class="total">
+                          { number_format(calculateTotal(portfolio), 0, { with_jp_prefix: true }) }円
+                        </td>
+                        <td colspan="3" class="total">
+                          { number_format(calculateTotal(portfolio, 'btc'), 8) } BTC
+                        </td>
                     </tr>
                 </tfoot>
             </table>
@@ -63,9 +69,9 @@
                     <tr>
                         <th class="currency">通貨</th>
                         <th class="price-jpy">価格(JPY)</th>
-                        <th class="balance">保有枚数</th>
+                        <th class="change-day">上昇率(24h)</th>
                         <th class="subtotal">小計</th>
-                        <th class="delete">削除</th>
+                        <th class="detail">詳細</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -73,17 +79,62 @@
                         <td class="currency">
                             <a href="https://coinmarketcap.com/currencies/{ currency }/" target="_blank" rel="noreferrer noopener">{ currency_data[currency].symbol }</a>
                         </td>
-                        <td class="price-jpy">{ number_format(currency_data[currency].price_jpy, 2) }</td>
-                        <td class="balance"><input type="number" class="balance-input" value="{ balance }" oninput="{ updateBalance }"></td>
+                        <td class="price-jpy">{ number_format(currency_data[currency].price_jpy, 0, { with_jp_prefix: true, significant_figures: 3 }) }</td>
+                        <td class="change-day"><span class="{ plus: currency_data[currency].percent_change_24h >= 0, minus: currency_data[currency].percent_change_24h < 0 }">{ number_format(currency_data[currency].percent_change_24h, 2) }%</span></td>
                         <td class="subtotal">{ number_format(balance * currency_data[currency].price_jpy) }</td>
-                        <td class="delete"><button class="delete-button" onclick={ deletePortfolio }>削除</button></td>
+                        <td class="detail">
+                            <modal title={ currency_data[currency].symbol + 'の詳細' }
+                                   key={ uid }
+                                   data={ currency_data[currency] }
+                                   balance={ balance }
+                                   memo={ memo }
+                                   dispatcher={ opts.dispatcher }>
+                                <table>
+                                    <tr>
+                                        <th>価格(BTC)</th>
+                                        <td class="price-btc">{ opts.data.price_btc }</td>
+                                    </tr>
+                                    <tr>
+                                        <th>価格(JPY)</th>
+                                        <td class="price-jpy">{ number_format(opts.data.price_jpy, 0, { with_jp_prefix: true, significant_figures: 3 }) }</td>
+                                    </tr>
+                                    <tr>
+                                        <th>上昇率(7日間)</th>
+                                        <td class="change-week"><span class="{ plus: opts.data.percent_change_7d >= 0, minus: opts.data.percent_change_7d < 0 }">{ number_format(opts.data.percent_change_7d, 2) }%</span></td>
+                                    </tr>
+                                    <tr>
+                                        <th>上昇率(24時間)</th>
+                                        <td class="change-day"><span class="{ plus: opts.data.percent_change_24h >= 0, minus: opts.data.percent_change_24h < 0 }">{ number_format(opts.data.percent_change_24h, 2) }%</span></td>
+                                    </tr>
+                                    <tr>
+                                        <th>資産割合</th>
+                                        <td class="percentage">{ number_format((opts.balance * opts.data.price_jpy) / parent.calculateTotal(parent.portfolio) * 100, 2) }%</td>
+                                    </tr>
+                                    <tr>
+                                        <th>保有枚数</th>
+                                        <td class="balance"><input type="number" class="balance-input" value="{ opts.balance }" oninput="{ parent.updateBalance.bind(parent) }"></td>
+                                    </tr>
+                                    <tr>
+                                        <th>メモ</th>
+                                        <td class="memo"><input type="text" class="memo-input" value="{ opts.memo }" oninput="{ parent.updateMemo.bind(parent) }" autocomplete="off"></td>
+                                    </tr>
+                                    <tr>
+                                        <th>削除</th>
+                                        <td class="delete"><button class="delete-button" onclick={ parent.deletePortfolio.bind(parent) }>削除</button></td>
+                                    </tr>
+                                </table>
+                            </modal>
+                            <button class="detail-button" onclick={ showDetail }>詳細</button>
+                        </td>
                     </tr>
                 </tbody>
                 <tfoot>
                     <tr>
                         <th colspan="3">合計</th>
-                        <td colspan="1">{ number_format(calculateTotal(portfolio)) }円</td>
-                        <td colspan="1">{ number_format(calculateTotal(portfolio, 'btc'), 8) } BTC</td>
+                        <td colspan="2">
+                          { number_format(calculateTotal(portfolio), 0, { with_jp_prefix: true }) }円<br />
+                          { number_format(calculateTotal(portfolio, 'btc'), 0, { significant_figures: 5 }) } BTC
+                        </td>
                     </tr>
                 </tfoot>
             </table>
@@ -93,11 +144,12 @@
             </div>
         </div>
         <p>
+            <small>※幻想計算機は<a href="https://github.com/arahaya/crypto-portfolio" target="_blank">赤字計算機</a>をベースに作成しています。</small><br>
             <small>※coinmarketcap.com掲載の通貨に対応しています。</small><br>
             <small>※レートは5分程度で更新されます。</small><br>
             <small>※入力された内容はブラウザのローカルストレージに保管され、サーバには送信されません。</small><br>
             利用API： <a href="https://coinmarketcap.com" target="_blank">coinmarketcap.com</a><br>
-            ソース: <a href="https://github.com/arahaya/crypto-portfolio" target="_blank">github</a>
+            ソース: <a href="https://github.com/katsurak/crypto-portfolio" target="_blank">github</a>
         </p>
     </main>
 
@@ -248,7 +300,8 @@
             background: #F5F5F5;
         }
 
-        table td.delete {
+        table td.delete,
+        table td.detail {
             text-align: center;
         }
 
@@ -268,7 +321,8 @@
             background-color: #43bded;
         }
 
-        .delete-button {
+        .delete-button,
+        .detail-button {
             padding: 5px 10px;
         }
 
@@ -284,7 +338,27 @@
             color: #c02a1d;
         }
 
+        /* table td.price-btc, 左揃えの方が見やすいから除外 */
+        .detail modal table td.price-btc, /* ただし、詳細モーダルでは右揃え */
+        table td.price-jpy,
+        table td.change-week,
+        table td.change-day,
+        table td.balance,
+        table td.price-jpy,
+        table td.subtotal,
+        table td.percentage,
+        table td.total {
+            text-align: right;
+        }
+
         .balance-input {
+            width: 100%;
+            text-align: right;
+            box-sizing: border-box;
+            border-radius: 4px;
+        }
+
+        .memo-input {
             width: 100%;
             box-sizing: border-box;
             border-radius: 4px;
@@ -303,7 +377,7 @@
             display: none;
         }
 
-        @media screen and (max-width: 1200px) {
+        @media screen and (max-width: 960px) {
             .mobile-only {
                 display: block;
             }
@@ -373,10 +447,12 @@
 
             input.balance-input {
                 height: 28px;
+                min-width: 5ex;
                 padding: 0 5px;
             }
 
-            .delete-button {
+            .delete-button,
+            .detail-button {
                 padding: 3px 6px;
                 font-size: 11px;
             }
@@ -416,92 +492,28 @@
             return indexData(data, 'id');
         }
 
-        function getSession() {
-            var session_v1 = localStorage.getItem('store');
-            var session_v2 = localStorage.getItem('store_v2');
+        function getPortfolioFromSession(sessionManager, currency_data, callback) {
+            sessionManager.getSession(function (session) {
+                var portfolio = [];
 
-            session_v1 = session_v1 ? JSON.parse(session_v1) : null;
-            session_v2 = session_v2 ? JSON.parse(session_v2) : null;
+                session.portfolio.forEach(function (item) {
+                    var currency = currency_data[item.currency];
 
-            if (session_v1 && !session_v2) {
-                session_v2 = {portfolio: []};
-
-                for (var exchange in session_v1) {
-                    if (session_v1.hasOwnProperty(exchange)) {
-                        for (var currency in session_v1[exchange]) {
-                            if (session_v1[exchange].hasOwnProperty(currency)) {
-                                var balance = session_v1[exchange][currency];
-                                var currency_id;
-
-                                // Polo Stellar fix
-                                if (currency == 'STR') {
-                                    currency = 'XLM';
-                                }
-
-                                for (var i = 0, l = this.currency_data.length; i < l; i++) {
-                                    var d = this.currency_data[i];
-
-                                    if (d.symbol == currency) {
-                                        currency_id = d.id;
-                                        break;
-                                    }
-                                }
-
-                                if (!currency_id) {
-                                    continue;
-                                }
-
-                                session_v2.portfolio.push({
-                                    currency: currency_id,
-                                    balance: balance,
-                                    memo: ''
-                                });
-                            }
-                        }
+                    if (!currency) {
+                        return;
                     }
-                }
-            }
 
-            return session_v2 ? session_v2 : {portfolio: []};
-        }
-
-        function saveSession(portfolio) {
-            var session = {
-                portfolio: []
-            };
-
-            portfolio.forEach(function (item) {
-                session.portfolio.push({
-                    currency: item.currency,
-                    balance: item.balance,
-                    memo: item.memo
+                    portfolio.push({
+                        uid: generateId(),
+                        symbol: currency.symbol,
+                        currency: currency.id,
+                        balance: item.balance,
+                        memo: item.memo
+                    });
                 });
+
+                callback(portfolio.sort(sortBySymbol));
             });
-
-            localStorage.setItem('store_v2', JSON.stringify(session));
-        }
-
-        function restorePortfolioFromSession (currency_data) {
-            var session = getSession();
-            var portfolio = [];
-
-            session.portfolio.forEach(function (item) {
-                var currency = currency_data[item.currency];
-
-                if (!currency) {
-                    return;
-                }
-
-                portfolio.push({
-                    uid: generateId(),
-                    symbol: currency.symbol,
-                    currency: currency.id,
-                    balance: item.balance,
-                    memo: item.memo
-                });
-            });
-
-            return portfolio.sort(sortBySymbol);
         }
 
         this.getCurrencyList = function () {
@@ -523,7 +535,17 @@
             item.balance = e.target.value;
             item.subtotal = item.balance * item.price_jpy;
 
-            saveSession(this.portfolio);
+            this.sessionManager.saveSession(this.portfolio, function () {
+                this.update();
+            }.bind(this));
+        }
+
+        this.updateMemo = function (e) {
+            var item = e.item;
+
+            item.memo = e.target.value;
+
+            this.sessionManager.saveSession(this.portfolio);
         }
 
         this.calculateTotal = function (portfolio, currency) {
@@ -551,18 +573,26 @@
 
             this.portfolio.sort(sortBySymbol);
 
-            saveSession(this.portfolio);
-
-            document.querySelector('app').classList.remove('sidebar-opened');
+            this.sessionManager.saveSession(this.portfolio, function () {
+                document.querySelector('app').classList.remove('sidebar-opened');
+            });
         }
 
         this.deletePortfolio = function (e) {
+            if (! window.confirm('この通貨を削除してもよろしいか？')) {
+                return false;
+            }
+
             var item = e.item;
             var index = this.portfolio.indexOf(item);
 
-            delete this.portfolio.splice(index, 1);
+            if (index >= 0) {
+              delete this.portfolio.splice(index, 1);
 
-            saveSession(this.portfolio);
+              this.sessionManager.saveSession(this.portfolio);
+
+              this.update();
+            }
         }
 
         this.toggleSidebar = function () {
@@ -576,7 +606,7 @@
                 var headers = {
                     'X-Requested-With': 'XMLHttpRequest'
                 };
-                fetch('/', {headers: headers})
+                fetch(document.location.pathname, {headers: headers})
                     .then(function (response) {
                         return response.json();
                     })
@@ -593,13 +623,43 @@
             document.title = number_format(this.calculateTotal(this.portfolio)) + "円 - " + this.title;
         }
 
+        this.showDetail = function (e) {
+            var item = e.item;
+            opts.dispatcher.trigger('modal-show[' + item.uid + ']', item)
+        }
+
+        this.setSessionManager = function (storageType, onChanged) {
+            onChanged = onChanged.bind(this);
+            if (storageType === 'firebase') {
+                var unsubscribe = firebase.auth().onAuthStateChanged(function (user) {
+                    if (user) {
+                        this.sessionManager = new SessionManager(new Firestore('portfolios', user.uid));
+                        onChanged();
+                        unsubscribe();
+                    }
+                }.bind(this));
+            } else {
+                this.sessionManager = new SessionManager(new LocalStorage());
+                onChanged();
+            }
+        }.bind(this);
+
+        this.portfolio = [];
+        this.raw_data = opts.initial_data;
+        this.currency_data = indexMarketDataById(opts.initial_data);
+
         this.on('mount', this.updatePageTitle);
         this.on('updated', this.updatePageTitle);
 
-        this.raw_data = opts.initial_data;
-        this.currency_data = indexMarketDataById(opts.initial_data);
-        this.portfolio = restorePortfolioFromSession(this.currency_data);
-        this.startAutoUpdate();
+        new LocalStorage().getItem('storage_type', function (storageType) {
+            this.setSessionManager(storageType, function () {
+                getPortfolioFromSession(this.sessionManager, this.currency_data, function (portfolio) {
+                    this.portfolio = portfolio;
+                    this.update();
+                    this.startAutoUpdate();
+                }.bind(this));
+            });
+        }.bind(this));
     </script>
 
 </app>
