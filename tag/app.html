@@ -670,7 +670,7 @@
                 var headers = {
                     'X-Requested-With': 'XMLHttpRequest'
                 };
-                fetch('/', {headers: headers})
+                fetch(document.location.pathname, {headers: headers})
                     .then(function (response) {
                         return response.json();
                     })
