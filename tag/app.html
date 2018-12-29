@@ -24,7 +24,7 @@
                     <tr>
                         <th class="currency">通貨</th>
                         <th class="price-btc">BTCレート</th>
-                        <th class="price-jpy">価格(JPY)</th>
+                        <th class="price-jpy">価格({ convert })</th>
                         <th class="change-week">上昇率(7日)</th>
                         <th class="change-day">上昇率(24時間)</th>
                         <th class="balance">保有枚数</th>
@@ -36,23 +36,23 @@
                 <tbody>
                     <tr each={ portfolio }>
                         <td class="currency">
-                            <a href="https://coinmarketcap.com/currencies/{ currency }/" target="_blank" rel="noreferrer noopener">{ currency_data[currency].name } ({ currency_data[currency].symbol })</a>
+                            <a href="https://coinpaprika.com/coin/{ currency }/" target="_blank" rel="noreferrer noopener">{ currency_data[currency].name } ({ currency_data[currency].symbol })</a>
                         </td>
-                        <td class="price-btc">{ currency_data[currency].price_btc }</td>
-                        <td class="price-jpy">{ number_format(currency_data[currency].price_jpy, 2) }円</td>
-                        <td class="change-week"><span class="{ plus: currency_data[currency].percent_change_7d >= 0, minus: currency_data[currency].percent_change_7d < 0 }">{ number_format(currency_data[currency].percent_change_7d, 2) }%</span></td>
-                        <td class="change-day"><span class="{ plus: currency_data[currency].percent_change_24h >= 0, minus: currency_data[currency].percent_change_24h < 0 }">{ number_format(currency_data[currency].percent_change_24h, 2) }%</span></td>
+                        <td class="price-btc">{ currency_data[currency].quotes.BTC.price }</td>
+                        <td class="price-jpy">{ number_format(currency_data[currency].quotes[convert].price, 2) } { convert }</td>
+                        <td class="change-week"><span class="{ plus: currency_data[currency].quotes[convert].percent_change_7d >= 0, minus: currency_data[currency].quotes[convert].percent_change_7d < 0 }">{ number_format(currency_data[currency].quotes[convert].percent_change_7d, 2) }%</span></td>
+                        <td class="change-day"><span class="{ plus: currency_data[currency].quotes[convert].percent_change_24h >= 0, minus: currency_data[currency].quotes[convert].percent_change_24h < 0 }">{ number_format(currency_data[currency].quotes[convert].percent_change_24h, 2) }%</span></td>
                         <td class="balance"><input type="number" class="balance-input" value="{ balance }" oninput="{ updateBalance }"></td>
-                        <td class="subtotal">{ number_format(balance * currency_data[currency].price_jpy) }円</td>
-                        <td class="percentage">{ number_format((balance * currency_data[currency].price_jpy) / calculateTotal(portfolio) * 100, 2) }%</td>
+                        <td class="subtotal">{ number_format(balance * currency_data[currency].quotes[convert].price) } { convert }</td>
+                        <td class="percentage">{ number_format((balance * currency_data[currency].quotes[convert].price) / calculateTotal(portfolio) * 100, 2) }%</td>
                         <td class="delete"><button class="delete-button" onclick={ deletePortfolio }>削除</button></td>
                     </tr>
                 </tbody>
                 <tfoot>
                     <tr>
                         <th colspan="6">合計</th>
-                        <td colspan="1">{ number_format(calculateTotal(portfolio)) }円</td>
-                        <td colspan="2">{ number_format(calculateTotal(portfolio, 'btc'), 8) } BTC</td>
+                        <td colspan="1">{ number_format(calculateTotal(portfolio)) } { convert }</td>
+                        <td colspan="2">{ number_format(calculateTotal(portfolio, 'BTC'), 8) } BTC</td>
                     </tr>
                 </tfoot>
             </table>
@@ -62,7 +62,7 @@
                 <thead>
                     <tr>
                         <th class="currency">通貨</th>
-                        <th class="price-jpy">価格(JPY)</th>
+                        <th class="price-jpy">価格({ convert })</th>
                         <th class="balance">保有枚数</th>
                         <th class="subtotal">小計</th>
                         <th class="delete">削除</th>
@@ -71,11 +71,11 @@
                 <tbody>
                     <tr each={ portfolio }>
                         <td class="currency">
-                            <a href="https://coinmarketcap.com/currencies/{ currency }/" target="_blank" rel="noreferrer noopener">{ currency_data[currency].symbol }</a>
+                            <a href="https://coinpaprika.com/coin/{ currency }/" target="_blank" rel="noreferrer noopener">{ currency_data[currency].symbol }</a>
                         </td>
-                        <td class="price-jpy">{ number_format(currency_data[currency].price_jpy, 2) }</td>
+                        <td class="price-jpy">{ number_format(currency_data[currency].quotes[convert].price, 2) }</td>
                         <td class="balance"><input type="number" class="balance-input" value="{ balance }" oninput="{ updateBalance }"></td>
-                        <td class="subtotal">{ number_format(balance * currency_data[currency].price_jpy) }</td>
+                        <td class="subtotal">{ number_format(balance * currency_data[currency].quotes[convert].price) }</td>
                         <td class="delete"><button class="delete-button" onclick={ deletePortfolio }>削除</button></td>
                     </tr>
                 </tbody>
@@ -93,10 +93,10 @@
             </div>
         </div>
         <p>
-            <small>※coinmarketcap.com掲載の通貨に対応しています。</small><br>
-            <small>※レートは5分程度で更新されます。</small><br>
+            <small>※coinpaprika.com掲載の通貨に対応しています。</small><br>
+            <small>※レートは30秒程度で更新されます。</small><br>
             <small>※入力された内容はブラウザのローカルストレージに保管され、サーバには送信されません。</small><br>
-            利用API： <a href="https://coinmarketcap.com" target="_blank">coinmarketcap.com</a><br>
+            利用API： <a href="https://coinpaprika.com" target="_blank">coinpaprika.com</a><br>
             ソース: <a href="https://github.com/arahaya/crypto-portfolio" target="_blank">github</a>
         </p>
     </main>
@@ -413,7 +413,7 @@
         }
 
         function indexMarketDataById(data) {
-            return indexData(data, 'id');
+            return indexData(data, 'id');;
         }
 
         function getSession() {
@@ -521,17 +521,18 @@
             var item = e.item;
 
             item.balance = e.target.value;
-            item.subtotal = item.balance * item.price_jpy;
+            //item.subtotal = item.balance * item.quotes.JPY.price;
 
             saveSession(this.portfolio);
         }
 
         this.calculateTotal = function (portfolio, currency) {
+            var self = this;
             var currency_data = this.currency_data;
             var total = 0;
 
             portfolio.forEach(function (item) {
-                total += item.balance * currency_data[item.currency]['price_' + (currency || 'jpy')];
+                total += item.balance * currency_data[item.currency].quotes[currency || self.convert].price;
             });
 
             return total;
@@ -576,7 +577,7 @@
                 var headers = {
                     'X-Requested-With': 'XMLHttpRequest'
                 };
-                fetch('/', {headers: headers})
+                fetch('/?format=json&convert=' + self.convert, {headers: headers})
                     .then(function (response) {
                         return response.json();
                     })
@@ -590,12 +591,13 @@
 
         this.updatePageTitle = function () {
             // ページタイトルを更新
-            document.title = number_format(this.calculateTotal(this.portfolio)) + "円 - " + this.title;
+            document.title = number_format(this.calculateTotal(this.portfolio)) + " " + this.convert + " - " + this.title;
         }
 
         this.on('mount', this.updatePageTitle);
         this.on('updated', this.updatePageTitle);
 
+        this.convert = opts.convert;
         this.raw_data = opts.initial_data;
         this.currency_data = indexMarketDataById(opts.initial_data);
         this.portfolio = restorePortfolioFromSession(this.currency_data);
