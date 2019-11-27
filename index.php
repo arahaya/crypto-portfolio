@@ -3,15 +3,8 @@
 define('CACHE_DIR', './cache');
 // Seconds to cache the ticker API results
 define('TICKER_CACHE_LIFETIME', 30);
-// Seconds to cache the forex API results
-define('FOREX_CACHE_LIFETIME', 600);
 // Ticker API endpoint
-define('TICKER_API', 'https://api.coinpaprika.com/v1/tickers');
-// Forex API endpoint (used to get the exchange rate for USD/JPY)
-define('FOREX_API', 'https://forex.1forge.com/1.0.3/quotes');
-// API key for the forex API
-// Free plan available at https://1forge.com/forex-data-api
-define('FOREX_API_KEY', getenv('FOREX_API_KEY'));
+define('TICKER_API', 'https://api.coingecko.com/api/v3/coins/markets?per_page=250&price_change_percentage=24h%2C7d');
 
 
 function get_from_cache_or_remote($cache, $remote, $cache_lifetime = TICKER_CACHE_LIFETIME) {
@@ -49,37 +42,45 @@ function get_from_cache_or_remote($cache, $remote, $cache_lifetime = TICKER_CACH
 }
 
 function fetch_ticker_api($convert) {
-    $data = get_from_cache_or_remote("tickers_{$convert}.json", TICKER_API . "?quotes=BTC,USD", TICKER_CACHE_LIFETIME);
-
-    if ($convert != 'USD') {
-        $convert_rate = fetch_forex_api($convert);
-        $data = convert_data($data, $convert_rate);
+    // 掲載通貨が多すぎるので、最初の1,000件に限定する
+    $data = array();
+    for ($i = 1; $i <= 4; $i++) {
+        $json_data = get_from_cache_or_remote("tickers_{$convert}_{$i}.json", TICKER_API . "&vs_currency={$convert}&page={$i}", TICKER_CACHE_LIFETIME);
+        $data = array_merge($data, json_decode($json_data, true));
     }
 
-    return $data;
-}
-
-function fetch_forex_api($convert) {
-    if ($convert == 'USD') {
-        return 1;
+    $base_btc_price = 1;
+    foreach ($data as $key => $val) {
+        if ($val['id'] == 'bitcoin') {
+            $base_btc_price = $val['current_price'];
+            break;
+        }
     }
 
-    $json = get_from_cache_or_remote("forex_{$convert}.json", FOREX_API . "?pairs=USD{$convert}&api_key=" . FOREX_API_KEY, FOREX_CACHE_LIFETIME);
-    $data = json_decode($json, true);
-    return $data[0]['price'];
+    $json_data = convert_data($data, $convert, $base_btc_price);
+
+    return $json_data;
 }
 
-function convert_data($data, $convert_rate) {
+function convert_data($data, $convert, $base_btc_price) {
     if (!is_array($data)) {
         $data = json_decode($data, true);
     }
 
+    $converted = array();
     foreach ($data as $key => $val) {
-        $data[$key]['quotes']['JPY'] = $data[$key]['quotes']['USD'];
-        $data[$key]['quotes']['JPY']['price'] = $data[$key]['quotes']['USD']['price'] * $convert_rate;
+        $converted[$key] = array(
+            'id' => $val['id'],
+            'symbol' => strtoupper($val['symbol']),
+            'name' => $val['name'],
+            $convert => $val['current_price'],
+            'BTC' => $val['current_price'] / $base_btc_price,
+            '24h' => $val['price_change_percentage_24h_in_currency'],
+            '7d' => $val['price_change_percentage_7d_in_currency'],
+        );
     }
 
-    return json_encode($data);
+    return json_encode($converted);
 }
 
 $convert = isset($_REQUEST['convert']) ? $_REQUEST['convert'] : 'JPY';
@@ -93,10 +94,10 @@ if (isset($_REQUEST['format']) && ($_REQUEST['format'] == 'json')) {
 <!doctype html>
 <html lang="ja">
 <head>
-	<meta charset="utf-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" id="viewport" content="width=device-width">
-    <title>赤字計算機 v2</title>
+    <title>赤字計算機 v3</title>
     <meta name="description" content="暗号通貨（仮想通貨）の赤字を日本円でわかりやすく管理">
     <style>
         html, body {

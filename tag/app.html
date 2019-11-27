@@ -8,7 +8,7 @@
         </div>
         <ul>
             <li each={ getCurrencyList() } onclick={ addPortfolio }>
-                { name } ({ symbol })
+                { name } ({ symbol.toUpperCase() })
             </li>
         </ul>
     </div>
@@ -36,15 +36,15 @@
                 <tbody>
                     <tr each={ portfolio }>
                         <td class="currency">
-                            <a href="https://coinpaprika.com/coin/{ currency }/" target="_blank" rel="noreferrer noopener">{ currency_data[currency].name } ({ currency_data[currency].symbol })</a>
+                            <a href="https://www.coingecko.com/en/coins/{ currency }" target="_blank" rel="noreferrer noopener">{ currency_data[currency].name } ({ currency_data[currency].symbol.toUpperCase() })</a>
                         </td>
-                        <td class="price-btc">{ currency_data[currency].quotes.BTC.price }</td>
-                        <td class="price-jpy">{ number_format(currency_data[currency].quotes[convert].price, 2) } { convert }</td>
-                        <td class="change-week"><span class="{ plus: currency_data[currency].quotes[convert].percent_change_7d >= 0, minus: currency_data[currency].quotes[convert].percent_change_7d < 0 }">{ number_format(currency_data[currency].quotes[convert].percent_change_7d, 2) }%</span></td>
-                        <td class="change-day"><span class="{ plus: currency_data[currency].quotes[convert].percent_change_24h >= 0, minus: currency_data[currency].quotes[convert].percent_change_24h < 0 }">{ number_format(currency_data[currency].quotes[convert].percent_change_24h, 2) }%</span></td>
+                        <td class="price-btc">{ number_format(currency_data[currency].BTC, 8) }</td>
+                        <td class="price-jpy">{ number_format(currency_data[currency][convert], 2) } { convert }</td>
+                        <td class="change-week"><span class="{ plus: currency_data[currency]['7d'] >= 0, minus: currency_data[currency]['7d'] < 0 }">{ number_format(currency_data[currency]['7d'], 2) }%</span></td>
+                        <td class="change-day"><span class="{ plus: currency_data[currency]['24h'] >= 0, minus: currency_data[currency]['24h'] < 0 }">{ number_format(currency_data[currency]['24h'], 2) }%</span></td>
                         <td class="balance"><input type="number" class="balance-input" value="{ balance }" oninput="{ updateBalance }"></td>
-                        <td class="subtotal">{ number_format(balance * currency_data[currency].quotes[convert].price) } { convert }</td>
-                        <td class="percentage">{ number_format((balance * currency_data[currency].quotes[convert].price) / calculateTotal(portfolio) * 100, 2) }%</td>
+                        <td class="subtotal">{ number_format(balance * currency_data[currency][convert]) } { convert }</td>
+                        <td class="percentage">{ number_format((balance * currency_data[currency][convert]) / calculateTotal(portfolio) * 100, 2) }%</td>
                         <td class="delete"><button class="delete-button" onclick={ deletePortfolio }>削除</button></td>
                     </tr>
                 </tbody>
@@ -71,11 +71,11 @@
                 <tbody>
                     <tr each={ portfolio }>
                         <td class="currency">
-                            <a href="https://coinpaprika.com/coin/{ currency }/" target="_blank" rel="noreferrer noopener">{ currency_data[currency].symbol }</a>
+                            <a href="https://coinpaprika.com/coin/{ currency }/" target="_blank" rel="noreferrer noopener">{ currency_data[currency].symbol.toUpperCase() }</a>
                         </td>
-                        <td class="price-jpy">{ number_format(currency_data[currency].quotes[convert].price, 2) }</td>
+                        <td class="price-jpy">{ number_format(currency_data[currency][convert], 2) }</td>
                         <td class="balance"><input type="number" class="balance-input" value="{ balance }" oninput="{ updateBalance }"></td>
-                        <td class="subtotal">{ number_format(balance * currency_data[currency].quotes[convert].price) }</td>
+                        <td class="subtotal">{ number_format(balance * currency_data[currency][convert]) }</td>
                         <td class="delete"><button class="delete-button" onclick={ deletePortfolio }>削除</button></td>
                     </tr>
                 </tbody>
@@ -83,7 +83,7 @@
                     <tr>
                         <th colspan="3">合計</th>
                         <td colspan="1">{ number_format(calculateTotal(portfolio)) }円</td>
-                        <td colspan="1">{ number_format(calculateTotal(portfolio, 'btc'), 8) } BTC</td>
+                        <td colspan="1">{ number_format(calculateTotal(portfolio, 'BTC'), 8) } BTC</td>
                     </tr>
                 </tfoot>
             </table>
@@ -93,10 +93,10 @@
             </div>
         </div>
         <p>
-            <small>※coinpaprika.com掲載の通貨に対応しています。</small><br>
+            <small>※coingecko.comに掲載されている通貨の上位1,000件に対応しています。</small><br>
             <small>※レートは30秒程度で更新されます。</small><br>
             <small>※入力された内容はブラウザのローカルストレージに保管され、サーバには送信されません。</small><br>
-            利用API： <a href="https://coinpaprika.com" target="_blank">coinpaprika.com</a><br>
+            利用API： <a href="https://www.coingecko.com/api/documentations/v3" target="_blank">coingecko.com</a><br>
             ソース: <a href="https://github.com/arahaya/crypto-portfolio" target="_blank">github</a>
         </p>
     </main>
@@ -532,7 +532,7 @@
             var total = 0;
 
             portfolio.forEach(function (item) {
-                total += item.balance * currency_data[item.currency].quotes[currency || self.convert].price;
+                total += item.balance * currency_data[item.currency][(currency || self.convert).toUpperCase()];
             });
 
             return total;
@@ -577,7 +577,7 @@
                 var headers = {
                     'X-Requested-With': 'XMLHttpRequest'
                 };
-                fetch('/?format=json&convert=' + self.convert, {headers: headers})
+                fetch('./?format=json&convert=' + self.convert, {headers: headers})
                     .then(function (response) {
                         return response.json();
                     })
