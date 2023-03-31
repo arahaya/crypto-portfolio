@@ -24,6 +24,8 @@ function get_from_cache_or_remote($cache, $remote, $cache_lifetime = TICKER_CACH
         if (flock($fp, LOCK_EX | LOCK_NB)) {
             $options['ssl']['verify_peer'] = false;
             $options['ssl']['verify_peer_name'] = false;
+            $options['http']['method'] = 'GET';
+            $options['http']['header'] = 'User-Agent: Mozilla/5.0 (Windows NT 6.3; WOW64; Trident/7.0; Touch; rv:11.0) like Gecko';
             $contents = file_get_contents($remote, false, stream_context_create($options));
 
             if ($contents) {
@@ -84,6 +86,7 @@ function convert_data($data, $convert, $base_btc_price) {
 }
 
 $convert = isset($_REQUEST['convert']) ? $_REQUEST['convert'] : 'JPY';
+$convert = preg_match('/^[A-Z]{3}$/', $convert) ? $convert : 'JPY';
 $data = fetch_ticker_api($convert);
 
 if (isset($_REQUEST['format']) && ($_REQUEST['format'] == 'json')) {
